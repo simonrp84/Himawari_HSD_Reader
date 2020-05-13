@@ -226,7 +226,9 @@ integer function AHI_Calctime(ahi_main,verbose) result(status)
 	real(kind=ahi_dreal)	::	julian
 	real(kind=ahi_sreal)	::	sza,saa
 	real(kind=ahi_sreal)	::	sec
-	real (kind=ahi_sreal)	::	doy
+	real(kind=ahi_sreal)	::	doy
+	
+	real(kind=ahi_sreal), allocatable :: tmparr(:,:)
 
 	real(kind=ahi_sreal):: bob1,bob2
 	parameter (igreg=15+31*(10+12*1582))
@@ -270,23 +272,26 @@ integer function AHI_Calctime(ahi_main,verbose) result(status)
 	xmin = 1
 	ymin = 1
 
-	xmax = ahi_main%ahi_extent%x_max - ahi_main%ahi_extent%x_min
-	ymax = ahi_main%ahi_extent%y_max - ahi_main%ahi_extent%y_min
-
+	xmax = ahi_main%ahi_extent%x_max - ahi_main%ahi_extent%x_min + 1 
+	ymax = ahi_main%ahi_extent%y_max - ahi_main%ahi_extent%y_min + 1
+    if(ahi_main%do_solar_angles .eqv. .true.) then
 #ifdef _OPENMP
 !$omp parallel DO PRIVATE(i,x,y,sza,saa,tnr)
 #endif
-	do y=ymin,ymax
-		do x=xmin,xmax
-			retval	=	AHI_Solpos(iye,mon,idy,ihr,min,ahi_main%ahi_data%lat(x,y),ahi_main%ahi_data%lon(x,y),sza,saa)
-			ahi_main%ahi_data%sza(x,y)=sza
-			ahi_main%ahi_data%saa(x,y)=saa
-		enddo
-	enddo
+	    do y=ymin,ymax
+		    do x=xmin,xmax
+			    retval	=	AHI_Solpos(iye,mon,idy,ihr,min,ahi_main%ahi_data%lat(x,y),ahi_main%ahi_data%lon(x,y),sza,saa)
+			    ahi_main%ahi_data%sza(x,y)=sza
+			    ahi_main%ahi_data%saa(x,y)=saa
+		    enddo
+	    enddo
 #ifdef _OPENMP
 !$omp end parallel do
 #endif
-
+    else
+        ahi_main%ahi_data%sza(:,:) = him_sreal_fill_value
+        ahi_main%ahi_data%saa(:,:) = him_sreal_fill_value
+    endif
 	status	=	HIMAWARI_SUCCESS
 	return
 
@@ -357,7 +362,7 @@ integer function AHI_calc_satangs(ahi_main,verbose) result(status)
 
 	ahi_main%ahi_data%vza = acos(u3 / sqrt(u1*u1 + u2*u2 + u3*u3)) * HIMAWARI_RADTODEG
 
-	ahi_main%ahi_data%vaa = atan2(-u2, u1) * HIMAWARI_RADTODEG
+	ahi_main%ahi_data%vaa = atan2(u2, u1) * HIMAWARI_RADTODEG
 
 	where (ahi_main%ahi_data%vaa .lt. 0)
 		ahi_main%ahi_data%vaa	=	ahi_main%ahi_data%vaa+360.0

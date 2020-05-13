@@ -27,7 +27,11 @@ module himawari_readwrite
 contains
 
 
-integer function AHI_Main_Read(filename,geofile,ahi_data2,ahi_extent,n_bands,band_ids,do_not_alloc,do_geo,predef_geo,do_solar,vis_res,satposstr, verbose) result(status)
+integer function AHI_Main_Read(filename, geofile, ahi_data2, &
+                               ahi_extent, n_bands, band_ids,&
+                               do_not_alloc, do_geo, predef_geo, &
+                               do_solar, vis_res, satposstr, &
+                               do_solar_angles, verbose) result(status)
 
 	character(len=*), intent(in)				::	filename
 	character(len=*), intent(in)				::	geofile
@@ -41,6 +45,7 @@ integer function AHI_Main_Read(filename,geofile,ahi_data2,ahi_extent,n_bands,ban
 	logical,intent(in)							:: do_solar
 	logical,intent(in)							:: vis_res
 	character(len=128), intent(inout)		::	satposstr
+	logical,intent(in)							:: do_solar_angles
 	logical,intent(in)							:: verbose
 
 	integer											::	satnum
@@ -77,6 +82,7 @@ integer function AHI_Main_Read(filename,geofile,ahi_data2,ahi_extent,n_bands,ban
 
 	ahi_main%vis_res	=	vis_res
 	ahi_main%do_solar	=	do_solar
+	ahi_main%do_solar_angles = do_solar_angles
 
 	if (verbose) write(*,*)"Reading AHI data for ",trim(ahi_main%ahi_info%timeslot(1:12))
 

@@ -32,6 +32,10 @@ program AHI_example_f90
 !    logical :: do_solar = .true.
 	logical :: do_solar = .false.
 
+	! Flag for whether the reader should calculate solar angles
+    logical :: do_solar_angles = .true.
+!	logical :: do_solar_angles = .false.
+
 	! Flag setting if we want to process at VIS or IR res
 !	logical :: vis_res = .true.
 	logical :: vis_res = .false.
@@ -157,7 +161,20 @@ program AHI_example_f90
 	endif
 
 	! Call the main reader function
-	retval	=	AHI_Main_Read(filename,"/media/eum/fast/ORAC/Data/GEO_FILES/AHI_141E_ANGLES.nc",ahi_data,ahi_extent,nchans,band_ids,1,1,.true.,do_solar,vis_res,satposstr,verbose)
+	retval	=	AHI_Main_Read(filename,  &
+	                          "/media/eum/fast/ORAC/Data/GEO_FILES/AHI_141E_ANGLES.nc", &
+	                          ahi_data, &
+	                          ahi_extent, &
+	                          nchans, &
+	                          band_ids, &
+	                          1, &
+	                          1, &
+	                          .true., &
+	                          do_solar, &
+	                          vis_res, &
+	                          satposstr, &
+	                          do_solar_angles, &
+	                          verbose)
 	if (retval .ne. HIMAWARI_SUCCESS) then
 		write(*,*)"Error encountered in data reading. Quitting."
 		stop

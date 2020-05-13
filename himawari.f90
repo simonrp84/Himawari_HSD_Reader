@@ -159,6 +159,7 @@ module himawari
 		integer(kind=ahi_sint)	::	inchans(HIMAWARI_MAX_CHANS)
 		integer(kind=ahi_sint)	::	convert(HIMAWARI_MAX_CHANS)
 		logical						::	do_solar
+		logical						::	do_solar_angles
 		logical						::	vis_res
 	end type himawari_t_struct
 
