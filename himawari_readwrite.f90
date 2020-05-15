@@ -745,6 +745,8 @@ integer function AHI_SavetoNCDF(outdata,ahi_extent,fname,bname,newfile,verbose) 
 	else
 		call AHI_NCDF_check(nf90_open(fname, NF90_WRITE, ncid))
 		call AHI_NCDF_check(nf90_redef(ncid))
+		call AHI_NCDF_check(nf90_inq_dimid(ncid, 'x', x_dimid))
+		call AHI_NCDF_check(nf90_inq_dimid(ncid, 'y', y_dimid))
 	endif
 
 	dimids =  (/ x_dimid, y_dimid /)
