@@ -306,6 +306,9 @@ integer function AHI_Calctime(ahi_main,verbose) result(status)
 end function AHI_Calctime
 
 integer function AHI_calc_satangs(ahi_main,verbose) result(status)
+    ! This function calculates viewing angles for AHI.
+    ! Loosely based on the calculations described here:
+    ! http://celestrak.com/columns/
 
     type(himawari_t_struct), intent(inout):: ahi_main
     logical, intent(in)	                  :: verbose
