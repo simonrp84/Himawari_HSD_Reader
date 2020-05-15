@@ -265,9 +265,15 @@ integer function AHI_Calctime(ahi_main,verbose) result(status)
 
 	tfact	=	10.0/(24.0*60.0)
 
+#ifdef _OPENMP
+!$omp parallel DO PRIVATE(y)
+#endif
 	do y=ahi_main%ahi_extent%y_min,ahi_main%ahi_extent%y_max
 			ahi_main%ahi_data%time(:,y - ahi_main%ahi_extent%y_min+1)=julian+tfact*(y/dble(HIMAWARI_IR_NLINES))
 	enddo
+#ifdef _OPENMP
+!$omp end parallel do
+#endif
 
 	xmin = 1
 	ymin = 1
@@ -276,6 +282,7 @@ integer function AHI_Calctime(ahi_main,verbose) result(status)
 	ymax = ahi_main%ahi_extent%y_max - ahi_main%ahi_extent%y_min + 1
     if(ahi_main%do_solar_angles .eqv. .true.) then
 #ifdef _OPENMP
+    if (verbose) print*,"Processing solar geometry using OpenMP"
 !$omp parallel DO PRIVATE(i,x,y,sza,saa,tnr)
 #endif
 	    do y=ymin,ymax
@@ -300,105 +307,90 @@ end function AHI_Calctime
 
 integer function AHI_calc_satangs(ahi_main,verbose) result(status)
 
-	type(himawari_t_struct), intent(inout)	::	ahi_main
-	logical, intent(in)							:: verbose
+    type(himawari_t_struct), intent(inout):: ahi_main
+    logical, intent(in)	                  :: verbose
 
+    real(kind=ahi_dreal) :: sin_o_lat, sin_o_lon, cos_o_lat, cos_o_lon
+    real(kind=ahi_dreal) :: obs_x, obs_y, obs_z, obs_alt
+    real(kind=ahi_dreal) :: sat_x, sat_y, sat_z, sat_alt
+    real(kind=ahi_dreal) :: del_x, del_y, del_z
+    real(kind=ahi_dreal) :: a, b, r, satlon, satlat, flatten, ut1
+    real(kind=ahi_dreal) :: theta_o, theta_s
+    real(kind=ahi_dreal) :: top_s, top_e, top_z, az_, rg_, el_
+    
+    real(kind=ahi_dreal) :: c, sq, achcp
+	integer              :: xmin, ymin, xmax, ymax, xpos, ypos
+    
+    ! Navigational data from the Himawari dataset
+    a = ahi_main%ahi_navdata%eqtrRadius
+    b = ahi_main%ahi_navdata%polrRadius
+    r = ahi_main%ahi_navdata%satdis - ahi_main%ahi_navdata%eqtrRadius
+    satlon = ahi_main%ahi_navdata%subLon
+    satlat = 0 ! We set this to zero, in reality it varies by <1 degree.
+    
+    flatten = (a - b) / b
+    
+    ! Here we set the observer to be on the geoid surface
+    ! This could be improved using a DEM or similar
+    obs_alt = 0
+    
+	xmin = 1
+	ymin = 1
 
-	real(kind=ahi_dreal),dimension(:,:),allocatable	::	N
-	real(kind=ahi_dreal),dimension(:,:),allocatable	::	x,y,z
-	real(kind=ahi_dreal),dimension(:,:),allocatable	::	cos_lat,sin_lat,cos_lon,sin_lon
-	real(kind=ahi_dreal),dimension(:,:),allocatable	::	qv1,qv2,qv3
-	real(kind=ahi_dreal),dimension(:,:),allocatable	::	u1,u2,u3
+	xmax = ahi_main%ahi_extent%x_max - ahi_main%ahi_extent%x_min + 1 
+	ymax = ahi_main%ahi_extent%y_max - ahi_main%ahi_extent%y_min + 1
+#ifdef _OPENMP
+    if (verbose) print*,"Processing viewing geometry using OpenMP"
+!$omp parallel DO PRIVATE(cos_o_lat, sin_o_lat, cos_o_lon, sin_o_lon, ut1, theta_o, c, sq, achcp, sat_x, sat_y, sat_z, obs_x, obs_y, obs_z, del_x, del_y, del_z, top_s, top_e, top_z, az_, rg_, el_)
+#endif
+    do ypos=ymin,ymax
+	    do xpos=xmin,xmax
 
-	real(kind=ahi_dreal)		::	e2,a,b
+            cos_o_lat = cos(ahi_main%ahi_data%lat(xpos, ypos) * HIMAWARI_DEGTORAD)
+            sin_o_lat = sin(ahi_main%ahi_data%lat(xpos, ypos) * HIMAWARI_DEGTORAD)
+            cos_o_lon = cos(ahi_main%ahi_data%lon(xpos, ypos) * HIMAWARI_DEGTORAD)
+            sin_o_lon = sin(ahi_main%ahi_data%lon(xpos, ypos) * HIMAWARI_DEGTORAD)
+            
+            ut1 = ahi_main%ahi_data%time(xpos, ypos) / 36525.0
+            
+            ! This calculates observer position
+            theta_o = 67310.54841 + ut1 * (876600 * 3600 + 8640184.812866 + ut1 * (0.093104 - ut1 * 6.2 * 10e-6))
+            theta_o = mod(theta_o / 240.0, 2 * HIMAWARI_PI)
+            theta_o = mod(theta_o + ahi_main%ahi_data%lon(xpos, ypos) * HIMAWARI_DEGTORAD, 2 * HIMAWARI_PI)
+            c = 1 / sqrt(1 + flatten * (flatten - 2) * sin_o_lat**2)
+            sq = c * (1 - flatten)**2 
+            achcp = (a * c + obs_alt) * cos_o_lat
+            obs_x = achcp * cos(theta_o)
+            obs_y = achcp * sin(theta_o)
+            obs_z = (a * sq + obs_alt) * sin_o_lat
+            
+            ! This calculates satellite position
+            theta_s = 67310.54841 + ut1 * (876600 * 3600 + 8640184.812866 + ut1 * (0.093104 - ut1 * 6.2 * 10e-6))
+            theta_s = mod(theta_s / 240.0, 2 * HIMAWARI_PI)
+            theta_s = mod(theta_s + satlon * HIMAWARI_DEGTORAD, 2 * HIMAWARI_PI)
+            achcp = ahi_main%ahi_navdata%satdis * cos(satlat)
+            sat_x = achcp * cos(theta_s)
+            sat_y = achcp * sin(theta_s)
+            sat_z = ahi_main%ahi_navdata%satdis * sin(satlat)
+            
+            del_x = sat_x - obs_x
+            del_y = sat_y - obs_y
+            del_z = sat_z - obs_z
+            
+            top_s =  sin_o_lat * cos(theta_o) * del_x +  sin_o_lat * sin(theta_o) * del_y - cos_o_lat * del_z
+            top_e = -sin(theta_o) * del_x + cos(theta_o) * del_y
+            top_z = cos_o_lat * cos(theta_o) * del_x + cos_o_lat * sin(theta_o) * del_y +  sin_o_lat * del_z
 
-	allocate(N(HIMAWARI_IR_NLINES,HIMAWARI_IR_NCOLS))
-
-	allocate(x(HIMAWARI_IR_NLINES,HIMAWARI_IR_NCOLS))
-	allocate(y(HIMAWARI_IR_NLINES,HIMAWARI_IR_NCOLS))
-	allocate(z(HIMAWARI_IR_NLINES,HIMAWARI_IR_NCOLS))
-
-	allocate(qv1(HIMAWARI_IR_NLINES,HIMAWARI_IR_NCOLS))
-	allocate(qv2(HIMAWARI_IR_NLINES,HIMAWARI_IR_NCOLS))
-	allocate(qv3(HIMAWARI_IR_NLINES,HIMAWARI_IR_NCOLS))
-
-	allocate(u1(HIMAWARI_IR_NLINES,HIMAWARI_IR_NCOLS))
-	allocate(u2(HIMAWARI_IR_NLINES,HIMAWARI_IR_NCOLS))
-	allocate(u3(HIMAWARI_IR_NLINES,HIMAWARI_IR_NCOLS))
-
-	allocate(cos_lat(HIMAWARI_IR_NLINES,HIMAWARI_IR_NCOLS))
-	allocate(sin_lat(HIMAWARI_IR_NLINES,HIMAWARI_IR_NCOLS))
-	allocate(cos_lon(HIMAWARI_IR_NLINES,HIMAWARI_IR_NCOLS))
-	allocate(sin_lon(HIMAWARI_IR_NLINES,HIMAWARI_IR_NCOLS))
-
-	a	=	ahi_main%ahi_navdata%eqtrRadius
-	b	=	ahi_main%ahi_navdata%polrRadius
-
-
-   cos_lat = cos(ahi_main%ahi_data%lat * HIMAWARI_DEGTORAD)
-   sin_lat = sin(ahi_main%ahi_data%lat * HIMAWARI_DEGTORAD)
-   cos_lon = cos(ahi_main%ahi_data%lon * HIMAWARI_DEGTORAD)
-   sin_lon = sin(ahi_main%ahi_data%lon * HIMAWARI_DEGTORAD)
-
-   e2	=	1. - (b * b) / (a * a)
-
-   N	=	a / sqrt(1. - e2 * sin_lat * sin_lat)
-
-   x	=	N * cos_lat * cos_lon;
-   y	=	N * cos_lat * sin_lon;
-   z	=	((b * b) / (a * a) * N) * sin_lat;
-
-   qv1	=	ahi_main%ahi_navdata%satdis * cos(ahi_main%ahi_navdata%subLon * HIMAWARI_DEGTORAD)
-   qv2	=	ahi_main%ahi_navdata%satdis * sin(ahi_main%ahi_navdata%subLon * HIMAWARI_DEGTORAD)
-   qv3	=	0
-
-	qv1 = qv1 - x
-	qv2 = qv2 - y
-	qv3 = qv3 - z
-	!s,e,z
-   u1 = (-sin_lat * cos_lon * qv1) + (-sin_lat * sin_lon * qv2) + (cos_lat * qv3)
-   u2 = (-sin_lon *           qv1) + ( cos_lon           * qv2)
-   u3 = ( cos_lat * cos_lon * qv1) + (-cos_lat * sin_lon * qv2) + (sin_lat * qv3)
-
-	ahi_main%ahi_data%vza = acos(u3 / sqrt(u1*u1 + u2*u2 + u3*u3)) * HIMAWARI_RADTODEG
-
-	ahi_main%ahi_data%vaa = atan2(u2, u1) * HIMAWARI_RADTODEG
-
-	where (ahi_main%ahi_data%vaa .lt. 0)
-		ahi_main%ahi_data%vaa	=	ahi_main%ahi_data%vaa+360.0
-	end where
-
-	where (ahi_main%ahi_data%vaa .gt. 360)
-		ahi_main%ahi_data%vaa	=	him_sreal_fill_value
-	end where
-	where (ahi_main%ahi_data%vaa .lt. 0)
-		ahi_main%ahi_data%vaa	=	him_sreal_fill_value
-	end where
-	where (ahi_main%ahi_data%vza .lt. 0)
-		ahi_main%ahi_data%vza	=	him_sreal_fill_value
-	end where
-	where (ahi_main%ahi_data%vza .gt. 180)
-		ahi_main%ahi_data%vza	=	him_sreal_fill_value
-	end where
-
-	deallocate(N)
-
-	deallocate(x)
-	deallocate(y)
-	deallocate(z)
-
-	deallocate(qv1)
-	deallocate(qv2)
-	deallocate(qv3)
-
-	deallocate(u1)
-	deallocate(u2)
-	deallocate(u3)
-
-	deallocate(cos_lat)
-	deallocate(sin_lat)
-	deallocate(cos_lon)
-	deallocate(sin_lon)
+            az_ = abs(atan2(-top_e, top_s) + HIMAWARI_PI)
+            rg_ = sqrt(del_x * del_x + del_y * del_y + del_z * del_z)
+            el_ = asin(top_z / rg_)
+            
+            ahi_main%ahi_data%vza(xpos, ypos) = 90. - el_ * HIMAWARI_RADTODEG
+            ahi_main%ahi_data%vaa(xpos, ypos) = az_ * HIMAWARI_RADTODEG
+            
+            
+        enddo
+    enddo
 
 	status	=	HIMAWARI_SUCCESS
      return
