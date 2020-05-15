@@ -162,14 +162,14 @@ program AHI_example_f90
 
 	! Call the main reader function
 	retval	=	AHI_Main_Read(filename,  &
-	                          "/media/eum/fast/ORAC/Data/GEO_FILES/AHI_141E_ANGLES.nc", &
+	                          "./AHI_141E_ANGLES.nc", &
 	                          ahi_data, &
 	                          ahi_extent, &
 	                          nchans, &
 	                          band_ids, &
 	                          1, &
 	                          1, &
-	                          .true., &
+	                          .false., &
 	                          do_solar, &
 	                          vis_res, &
 	                          satposstr, &
@@ -189,6 +189,8 @@ program AHI_example_f90
 		retval	=	AHI_SavetoNCDF(ahi_data%indata(:,:,1),ahi_extent,outname,"Band_01",1,verbose)
 !		retval	=	AHI_SavetoNCDF(ahi_data%indata(:,:,2),ahi_extent,outname,"Band_02",0,verbose)
 !		retval	=	AHI_SavetoNCDF(ahi_data%indata(:,:,3),ahi_extent,outname,"Band_03",0,verbose)
+		retval	=	AHI_SavetoNCDF(ahi_data%vza,ahi_extent,outname,"VZA",0,verbose)
+		retval	=	AHI_SavetoNCDF(ahi_data%vaa,ahi_extent,outname,"VAA",0,verbose)
 		retval	=	AHI_SavetoNCDF(ahi_data%sza,ahi_extent,outname,"SZA",0,verbose)
 		retval	=	AHI_SavetoNCDF(ahi_data%saa,ahi_extent,outname,"SAA",0,verbose)
 		retval	=	AHI_SavetoNCDF(ahi_data%lat,ahi_extent,outname,"Lat",0,verbose)
