@@ -2,7 +2,9 @@
 ! *
 ! *    Copyright (C) 2016-2019 Simon Proud <simon.proud@physics.ox.ac.uk>
 ! *    License: CC BY-NC-ND 4.0
-! *
+! * 
+! 2020/05/18 CP made change to open call as later version of gfortran does not like 'newunit'  als small change to inquire call for same reason
+!
 ! ******************************************************************************/
 
 
@@ -504,19 +506,20 @@ integer function AHI_readchan(fname, indata,band,convert,ahi_nav,verbose)result(
 	real 						::	temp,temp2
 	integer					::	arrxs,arrys,filelun,flen
 	real(kind=ahi_dreal)	::	gain,offset,c0,c1,c2,lspd,plnk,bolz,clamb
-
+        logical:: ef
+ 
 	bval	=	band
 
 	if (band.eq.1.or.band.eq.2.or.band.eq.4) then
-		open(newunit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
+		open(unit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
 		arrxs	=	HIMAWARI_VIS_NLINES/10
 		arrys	=	HIMAWARI_VIS_NCOLS
 	else if (band.eq.3) then
-		open(newunit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
+		open(unit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
 		arrxs	=	HIMAWARI_HVI_NLINES/10
 		arrys	=	HIMAWARI_HVI_NCOLS
 	else
-		open(newunit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
+		open(unit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
 		arrxs	=	HIMAWARI_IR_NLINES/10
 		arrys	=	HIMAWARI_IR_NCOLS
 	endif
@@ -588,7 +591,7 @@ integer function AHI_readchan(fname, indata,band,convert,ahi_nav,verbose)result(
 	ahi_nav%cfac				=	ahi_nav%cfac/HIMAWARI_DEGTORAD
 	ahi_nav%lfac				=	ahi_nav%lfac/HIMAWARI_DEGTORAD
 
-	INQUIRE(FILE=fname, SIZE=flen)
+	INQUIRE(FILE=trim(fname), SIZE=flen, EXIST=ef)
 	flen	=	flen-(arrxs*arrys*2)
 	call	fseek(filelun,flen,0,retval)
 	read(filelun)tdata(:,:)
