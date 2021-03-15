@@ -128,37 +128,37 @@ module himawari
 
     ! Image extents
     type :: himawari_t_extent
-        integer(kind=ahi_sint) :: x_min
-        integer(kind=ahi_sint) :: y_min
-        integer(kind=ahi_sint) :: x_max
-        integer(kind=ahi_sint) :: y_max
-        integer(kind=ahi_sint) :: x_size
-        integer(kind=ahi_sint) :: y_size
-        logical,dimension(10) :: procseg
+        integer(kind=ahi_sint)	::	x_min
+        integer(kind=ahi_sint)	::	y_min
+        integer(kind=ahi_sint)	::	x_max
+        integer(kind=ahi_sint)	::	y_max
+        integer(kind=ahi_sint)	::	x_size
+        integer(kind=ahi_sint)	::	y_size
+        logical,dimension(10)		::	procseg
 
-        integer       :: segdel_ir = 550
-        integer       :: segdel_vi = 1100
-        integer       :: segdel_hv = 2200
+        integer       			::	segdel_ir = 550
+        integer     			::	segdel_vi = 1100
+        integer      			::	segdel_hv = 2200
 
-        integer, dimension(10) :: segpos_ir = (/1, 551,1101,1651,2201,2751, 3301, 3851, 4401, 4951/)
-        integer, dimension(10) :: segpos_vi = (/1,1101,2201,3301,4401,5501, 6601, 7701, 8801, 9901/)
-        integer, dimension(10) :: segpos_hv = (/1,2201,4401,6601,8801,11001,13201,15401,17601,19801/)
+        integer, dimension(10) 	::	segpos_ir = (/1, 551,1101,1651,2201,2751, 3301, 3851, 4401, 4951/)
+        integer, dimension(10) 	::	segpos_vi = (/1,1101,2201,3301,4401,5501, 6601, 7701, 8801, 9901/)
+        integer, dimension(10) 	::	segpos_hv = (/1,2201,4401,6601,8801,11001,13201,15401,17601,19801/)
 
-        integer,dimension(3)  :: startpos
-        integer,dimension(3)  :: endpos
+        integer,dimension(3)  	::	startpos
+        integer,dimension(3)  	::	endpos
     end type himawari_t_extent
 
     ! Main struct
     type :: himawari_t_struct
-        type(himawari_t_data) :: ahi_data
-        type(himawari_t_navdata):: ahi_navdata
-        type(himawari_t_info) :: ahi_info
-        type(himawari_t_extent) :: ahi_extent
-        integer(kind=ahi_sint) :: inchans(HIMAWARI_MAX_CHANS)
-        integer(kind=ahi_sint) :: convert(HIMAWARI_MAX_CHANS)
-        logical      :: do_solar
-        logical      :: do_solar_angles
-        logical      :: vis_res
+        type(himawari_t_data)		::	ahi_data
+        type(himawari_t_navdata)	::	ahi_navdata
+        type(himawari_t_info)		::	ahi_info
+        type(himawari_t_extent)	::	ahi_extent
+        integer(kind=ahi_sint)	::	inchans(HIMAWARI_MAX_CHANS)
+        integer(kind=ahi_sint)	::	convert(HIMAWARI_MAX_CHANS)
+        logical      			::	do_solar
+        logical     			::	do_solar_angles
+        logical     			::	vis_res
     end type himawari_t_struct
 
 end module himawari
