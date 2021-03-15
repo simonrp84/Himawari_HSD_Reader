@@ -1,6 +1,6 @@
 !******************************************************************************%
 ! *
-! *    Copyright (C) 2016-2019 Simon Proud <simon.proud@physics.ox.ac.uk>
+! *    Copyright (C) 2016-2021 Simon Proud <simon.proud@physics.ox.ac.uk>
 ! *    License: CC BY-NC-ND 4.0
 ! *
 ! ******************************************************************************/
@@ -21,7 +21,7 @@ module himawari_headerinfo
 	private
 
 	public ::	himawari_t_Basic_Info, &
-			    himawari_t_Data_Info, &
+			himawari_t_Data_Info, &
     			himawari_t_Proj_Info, &
     			himawari_t_Navi_Info, &
     			himawari_t_Calib_Info, &
@@ -77,7 +77,7 @@ end type	himawari_t_Data_Info
 
    ! Projection info, very useful for geoprocessing
 type	::	himawari_t_Proj_Info
-	integer(kind=ahi_byte) 	::	HeaderNum
+	integer(kind=ahi_byte) ::	HeaderNum
 	integer(kind=ahi_sint)	::	BlockLen
 	real(kind=ahi_dreal)	::	subLon
 	integer(kind=ahi_lint)	::	cfac
@@ -91,7 +91,7 @@ type	::	himawari_t_Proj_Info
 	real(kind=ahi_dreal)	::	projParam2
 	real(kind=ahi_dreal)	::	projParam3
 	real(kind=ahi_dreal)	::	projParamSd
-	integer(kind=ahi_sint)  ::	resampleKind
+	integer(kind=ahi_sint) ::	resampleKind
 	integer(kind=ahi_sint)	::	resampleSize
 	character*40		::	spare
 end type himawari_t_Proj_Info
@@ -99,7 +99,7 @@ end type himawari_t_Proj_Info
    ! Could also be used for geoproc, but we don't bother.
    ! Most of this is unnecessary when using the previous.
 type	::	himawari_t_Navi_Info
-	integer(kind=ahi_byte) 	::	HeaderNum
+	integer(kind=ahi_byte) ::	HeaderNum
 	integer(kind=ahi_sint)	::	BlockLen
 	real(kind=ahi_dreal)	::	navMjd
 	real(kind=ahi_dreal)	::	sspLon
@@ -118,7 +118,7 @@ end type himawari_t_Navi_Info
 
    ! Main calibration structure for each band
 type	::	himawari_t_Calib_Info
-	integer(kind=ahi_byte) 	::	HeaderNum
+	integer(kind=ahi_byte) ::	HeaderNum
 	integer(kind=ahi_sint)	::	BlockLen
 	integer(kind=ahi_sint)	::	bandNo
 	real(kind=ahi_dreal)	::	waveLen
@@ -172,7 +172,7 @@ end type himawari_t_VIS_Calib_Info
 
    !We don't use this
 type	::	himawari_t_InterCalib_Info
-	integer(kind=ahi_byte) 	::	HeaderNum
+	integer(kind=ahi_byte) ::	HeaderNum
 	integer(kind=ahi_sint)	::	BlockLen
 	real(kind=ahi_dreal)	::	gsicsCorr_C
 	real(kind=ahi_dreal)	::	gsicsCorr_C_er
@@ -189,7 +189,7 @@ end type himawari_t_InterCalib_Info
 
    ! Per-segment info. Is constant so we ignore it
 type	::	himawari_t_Segm_Info
-	integer(kind=ahi_byte) 	::	HeaderNum
+	integer(kind=ahi_byte) ::	HeaderNum
 	integer(kind=ahi_sint)	::	BlockLen
 	integer(kind=ahi_byte)	::	totalSegNum
 	integer(kind=ahi_byte)	::	segSeqNo
@@ -199,7 +199,7 @@ end type himawari_t_Segm_Info
 
    ! Not used by us, relates to L1.0 -> L1.5 proc
 type	::	himawari_t_NaviCorr_Info
-	integer(kind=ahi_byte) 	::	HeaderNum
+	integer(kind=ahi_byte) ::	HeaderNum
 	integer(kind=ahi_sint)	::	BlockLen
 	real(kind=ahi_sreal)	::	RoCenterColumn
 	real(kind=ahi_sreal)	::	RoCenterLine
@@ -233,7 +233,7 @@ end type himawari_t_Error_Info
 
    ! For future use
 type	::	himawari_t_Spare
-	integer(kind=ahi_byte) 	::	HeaderNum
+	integer(kind=ahi_byte)	::	HeaderNum
 	integer(kind=ahi_sint)	::	BlockLen
 	character*40		::	spare
 end type himawari_t_Spare
@@ -251,34 +251,34 @@ end type himawari_t_Correct_Table
    ! Header structure for the IR channels
 type	::	himawari_t_IR_Header
 	type(himawari_t_Basic_Info)		::	him_basic
-	type(himawari_t_Data_Info)			::	him_data
-	type(himawari_t_Proj_Info)			::	him_proj
-	type(himawari_t_Navi_Info)			::	him_nav
+	type(himawari_t_Data_Info)		::	him_data
+	type(himawari_t_Proj_Info)		::	him_proj
+	type(himawari_t_Navi_Info)		::	him_nav
 	type(himawari_t_Calib_Info)		::	him_calib
 	type(himawari_t_IR_Calib_Info)	::	him_chan_calib
 	type(himawari_t_InterCalib_Info)	::	him_interCalib
-	type(himawari_t_Segm_Info)			::	him_seg
+	type(himawari_t_Segm_Info)		::	him_seg
 	type(himawari_t_NaviCorr_Info)	::	him_navcorr
 	type(himawari_t_ObsTime_Info)		::	him_obstime
 	type(himawari_t_Error_Info)		::	him_error
-	type(himawari_t_Spare)				::	him_spare
+	type(himawari_t_Spare)			::	him_spare
 	type(himawari_t_Correct_Table)	::	him_correct_table
 end type	himawari_t_IR_Header
 
    ! Header structure for the VIS channels
 type	::	himawari_t_VIS_Header
 	type(himawari_t_Basic_Info)		::	him_basic
-	type(himawari_t_Data_Info)			::	him_data
-	type(himawari_t_Proj_Info)			::	him_proj
-	type(himawari_t_Navi_Info)			::	him_nav
+	type(himawari_t_Data_Info)		::	him_data
+	type(himawari_t_Proj_Info)		::	him_proj
+	type(himawari_t_Navi_Info)		::	him_nav
 	type(himawari_t_Calib_Info)		::	him_calib
 	type(himawari_t_VIS_Calib_Info)	::	him_chan_calib
 	type(himawari_t_InterCalib_Info)	::	him_interCalib
-	type(himawari_t_Segm_Info)			::	him_seg
+	type(himawari_t_Segm_Info)		::	him_seg
 	type(himawari_t_NaviCorr_Info)	::	him_navcorr
 	type(himawari_t_ObsTime_Info)		::	him_obstime
 	type(himawari_t_Error_Info)		::	him_error
-	type(himawari_t_Spare)				::	him_spare
+	type(himawari_t_Spare)			::	him_spare
 	type(himawari_t_Correct_Table)	::	him_correct_table
 end type	himawari_t_VIS_Header
 
