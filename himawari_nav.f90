@@ -114,9 +114,9 @@ integer function AHI_Pix2Geo(ahi_main,verbose) result(status)
 	logical, intent(in)							:: verbose
 
 !	real		::	Sd,Sn,S1,S2,S3,Sxy
-	integer	::	c1,l1
-	integer	::	xsize
-	integer	::	ysize
+	integer	::	c1, l1
+	integer	::	xsize, ysize
+	integer	::	cur_x, cur_y
 
 	real(kind=ahi_dreal),dimension(:,:),allocatable	::	c,l,x,y
 	real(kind=ahi_dreal),dimension(:,:),allocatable	::	Sd,Sn,S1,S2,S3,Sxy
@@ -124,23 +124,25 @@ integer function AHI_Pix2Geo(ahi_main,verbose) result(status)
 	xsize	=	HIMAWARI_IR_NLINES
 	ysize	=	HIMAWARI_IR_NCOLS
 
-	allocate(c(xsize,ysize))
-	allocate(l(xsize,ysize))
-	allocate(x(xsize,ysize))
-	allocate(y(xsize,ysize))
-	allocate(Sd(xsize,ysize))
-	allocate(sn(xsize,ysize))
-	allocate(s1(xsize,ysize))
-	allocate(s2(xsize,ysize))
-	allocate(s3(xsize,ysize))
-	allocate(sxy(xsize,ysize))
+	allocate(c(ahi_main%ahi_extent%x_size, ahi_main%ahi_extent%y_size))
+	allocate(l(ahi_main%ahi_extent%x_size, ahi_main%ahi_extent%y_size))
+	allocate(x(ahi_main%ahi_extent%x_size, ahi_main%ahi_extent%y_size))
+	allocate(y(ahi_main%ahi_extent%x_size, ahi_main%ahi_extent%y_size))
+	allocate(Sd(ahi_main%ahi_extent%x_size, ahi_main%ahi_extent%y_size))
+	allocate(sn(ahi_main%ahi_extent%x_size, ahi_main%ahi_extent%y_size))
+	allocate(s1(ahi_main%ahi_extent%x_size, ahi_main%ahi_extent%y_size))
+	allocate(s2(ahi_main%ahi_extent%x_size, ahi_main%ahi_extent%y_size))
+	allocate(s3(ahi_main%ahi_extent%x_size, ahi_main%ahi_extent%y_size))
+	allocate(sxy(ahi_main%ahi_extent%x_size, ahi_main%ahi_extent%y_size))
 
 	ahi_main%ahi_data%lat	=	him_sreal_fill_value
 	ahi_main%ahi_data%lon	=	him_sreal_fill_value
-	do c1=1,HIMAWARI_IR_NLINES
-		do l1=1,HIMAWARI_IR_NCOLS
-			c(c1,l1)=dble(c1)
-			l(c1,l1)=dble(l1)
+	do c1=ahi_main%ahi_extent%x_min, ahi_main%ahi_extent%x_max
+		cur_x = 1 + (c1 - ahi_main%ahi_extent%x_min)
+		do l1=ahi_main%ahi_extent%y_min, ahi_main%ahi_extent%y_max
+			cur_y = 1 + (l1 - ahi_main%ahi_extent%y_min)
+			c(cur_x,cur_y) = dble(c1)
+			l(cur_x,cur_y) = dble(l1)
 		enddo
 	enddo
 
@@ -173,7 +175,6 @@ integer function AHI_Pix2Geo(ahi_main,verbose) result(status)
 
 
 !	stop
-
 
 	where (ahi_main%ahi_data%lon .gt. 180.0)
 		ahi_main%ahi_data%lon	=	him_sreal_fill_value
