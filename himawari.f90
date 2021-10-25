@@ -98,7 +98,7 @@ module himawari
         real(kind=ahi_sreal),    DIMENSION(:,:,:), ALLOCATABLE:: indata(:, :, :)
         real(kind=ahi_sreal),    DIMENSION(:,:,:), ALLOCATABLE:: tmpdata(:, :, :)
         real(kind=ahi_sreal),    DIMENSION(:,:,:), ALLOCATABLE:: soldata(:, :, :)
-        !  integer(kind=ahi_sint),  DIMENSION(:,:,:), ALLOCATABLE:: soldata(:, :, :)
+        real(kind=ahi_sreal),    DIMENSION(:,:), ALLOCATABLE :: cal_slope(:)
     end type himawari_t_data
 
     ! Navigation parameters derived from the header file

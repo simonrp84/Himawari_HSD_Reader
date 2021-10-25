@@ -80,6 +80,7 @@ integer function	AHI_free_vals(ahi_main) result(status)
 	if (allocated(ahi_main%ahi_data%indata))	deallocate(ahi_main%ahi_data%indata)
 	if (allocated(ahi_main%ahi_data%tmpdata)) deallocate(ahi_main%ahi_data%tmpdata)
 	if (allocated(ahi_main%ahi_data%soldata)) deallocate(ahi_main%ahi_data%soldata)
+	if (allocated(ahi_main%ahi_data%cal_slope)) deallocate(ahi_main%ahi_data%cal_slope)
 
 	status	=	HIMAWARI_SUCCESS
 	return
@@ -101,6 +102,7 @@ integer function	AHI_free_vals_data(ahi_data,verbose) result(status)
 	if (allocated(ahi_data%indata))	deallocate(ahi_data%indata)
 	if (allocated(ahi_data%soldata)) deallocate(ahi_data%soldata)
 	if (allocated(ahi_data%tmpdata)) deallocate(ahi_data%tmpdata)
+	if (allocated(ahi_data%cal_slope)) deallocate(ahi_data%cal_slope)
 
 	status	=	HIMAWARI_SUCCESS
 	return
@@ -135,6 +137,9 @@ integer function	AHI_alloc_vals_data(ahi_data,ahi_extent,nchans,do_solar,verbose
 
 	if (allocated(ahi_data%indata) .neqv. .true.)		allocate(ahi_data%indata(ahi_extent%x_size,ahi_extent%y_size,nchans))
 	ahi_data%indata(:,:,:)	=	him_sreal_fill_value
+
+	if (allocated(ahi_data%cal_slope) .neqv. .true.)		allocate(ahi_data%cal_slope(nchans))
+	ahi_data%cal_slope(:)	=	him_sreal_fill_value
 
 	if (do_solar .eqv. .true.) then
 		if (allocated(ahi_data%soldata) .neqv. .true.)		allocate(ahi_data%soldata(ahi_extent%x_size,ahi_extent%y_size,3))
@@ -189,6 +194,9 @@ integer function	AHI_alloc_vals(ahi_main,ahi_extent,verbose) result(status)
 
 	if (allocated(ahi_main%ahi_data%indata) .neqv. .true.)		allocate(ahi_main%ahi_data%indata(ahi_extent%x_size,ahi_extent%y_size,ahi_main%ahi_data%n_bands))
 	ahi_main%ahi_data%indata(:,:,:)	=	him_sreal_fill_value
+
+	if (allocated(ahi_main%ahi_data%cal_slope) .neqv. .true.)		allocate(ahi_main%ahi_data%cal_slope(ahi_main%ahi_data%n_bands))
+	ahi_main%ahi_data%cal_slope(:)	=	him_sreal_fill_value
 
 	if (ahi_main%do_solar .eqv. .true.) then
 		if (allocated(ahi_main%ahi_data%soldata) .neqv. .true.)		allocate(ahi_main%ahi_data%soldata(ahi_extent%x_size,ahi_extent%y_size,3))
