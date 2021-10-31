@@ -221,7 +221,7 @@ integer function	AHI_get_file_name(cnum, timeslot, satnum, indir, outfile,verbos
 
 	if (satnum .eq. 101) then
 		outfile	=	trim(outfile)//trim("himawari8")
-	elseif (satnum .eq. 101) then
+	elseif (satnum .eq. 102) then
 		outfile	=	trim(outfile)//trim("himawari9")
 	else
 		write(*,*) "ERROR: Unsupported platform: ",satnum
