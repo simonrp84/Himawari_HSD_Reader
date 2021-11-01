@@ -61,21 +61,21 @@ integer function AHI_Solpos(year,month,day,hour,minute,lat,lon,sza,saa) result(s
 	retval	=	0
 
     retval = get_sza_saa(year,month,day,hour,minute,lat,lon,sza,saa)
-    if (retval .ne. 0) then
+    if (retval /= 0) then
         write(6, *) 'ERROR: get_sza_saa()'
         return
     end if
-	if (saa .gt. 360.0) then
+	if (saa > 360.0) then
 			saa	=	him_sreal_fill_value
 	endif
-	if (saa .lt. 0.0) then
+	if (saa < 0.0) then
 		saa	=	him_sreal_fill_value
 	endif
 	sza	=	abs(sza)
-	if (sza .gt. 180.0) then
+	if (sza > 180.0) then
 		sza	=	him_sreal_fill_value
 	endif
-	if (sza .lt. -180.0) then
+	if (sza < -180.0) then
 		sza	=	him_sreal_fill_value
 	endif
 
@@ -165,10 +165,10 @@ integer function AHI_Pix2Geo(ahi_main,verbose) result(status)
 
 	ahi_main%ahi_data%lat = sngl(atan(ahi_main%ahi_navdata%projParam3 * s3 / sxy) * HIMAWARI_RADTODEG)
 
-	where (ahi_main%ahi_data%lon .gt. 180.0)
+	where (ahi_main%ahi_data%lon > 180.0)
 		ahi_main%ahi_data%lon	=	ahi_main%ahi_data%lon-360.0
 	end where
-	where (ahi_main%ahi_data%lon .lt. -180.0)
+	where (ahi_main%ahi_data%lon < -180.0)
 		ahi_main%ahi_data%lon	=	ahi_main%ahi_data%lon+360.0
 	end where
 !	ahi_main%ahi_data%lat	=	ahi_main%ahi_data%lat*-1
@@ -176,17 +176,17 @@ integer function AHI_Pix2Geo(ahi_main,verbose) result(status)
 
 !	stop
 
-	where (ahi_main%ahi_data%lon .gt. 180.0)
+	where (ahi_main%ahi_data%lon > 180.0)
 		ahi_main%ahi_data%lon	=	him_sreal_fill_value
 	end where
-	where (ahi_main%ahi_data%lon .lt. -180.0)
+	where (ahi_main%ahi_data%lon < -180.0)
 		ahi_main%ahi_data%lon	=	him_sreal_fill_value
 	end where
 
-	where (ahi_main%ahi_data%lat .gt. 90.0)
+	where (ahi_main%ahi_data%lat > 90.0)
 		ahi_main%ahi_data%lat	=	him_sreal_fill_value
 	end where
-	where (ahi_main%ahi_data%lat .lt. -90.0)
+	where (ahi_main%ahi_data%lat < -90.0)
 		ahi_main%ahi_data%lat	=	him_sreal_fill_value
 	end where
 
@@ -241,16 +241,16 @@ integer function AHI_Calctime(ahi_main,verbose) result(status)
 	read(ahi_main%ahi_info%timeslot(9:10),'(i10)')ihr
 	read(ahi_main%ahi_info%timeslot(11:12),'(i10)')min
 
-	if(iye.eq.0.or. iye.lt.-4713) then
+	if(iye==0.or. iye<-4713) then
 		ifail=1
 		return
 	endif
-	if(iye.lt.0) then
+	if(iye<0) then
 		iyyy=iye+1
 	else
 		iyyy=iye
 	endif
-	if(mon.gt.2) then
+	if(mon>2) then
 		jy=iyyy
 		jm=mon+1
 	else
@@ -258,7 +258,7 @@ integer function AHI_Calctime(ahi_main,verbose) result(status)
 		jm=mon+13
 	endif
 	ijul=idint(365.25d0*dble(jy))+idint(30.6001d0*dble(jm))+idy+1720995
-	if(idy+31*(mon+12*iyyy).ge.igreg) then
+	if(idy+31*(mon+12*iyyy)>=igreg) then
 		ja=idint(0.01d0*dble(jy))
 		ijul=ijul+2-ja+idint(0.25d0*dble(ja))
 	endif

@@ -134,7 +134,7 @@ module himawari
         integer(kind=ahi_sint) :: y_max
         integer(kind=ahi_sint) :: x_size
         integer(kind=ahi_sint) :: y_size
-        logical,dimension(10)	 :: procseg
+        logical,dimension(10) :: procseg
 
         integer :: segdel_ir = 550
         integer :: segdel_vi = 1100

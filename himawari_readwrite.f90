@@ -64,7 +64,7 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
     ! Otherwise, assume filename is actually a top-level directory
     ! with band number subdirectories (B01, B02, etc)
     dotpos = scan(trim(filename),".", BACK= .true.)
-    if (dotpos .gt. 0) then
+    if (dotpos > 0) then
         ahi_main%archive_struct = .false.
     else
         ahi_main%archive_struct = .true.
@@ -72,11 +72,11 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
 
 	satnum = -99
 	pos	 = index(trim(filename),"HS_H08_")
-	if (pos .gt. 0) then
+	if (pos > 0) then
 	    satnum = 101
 	else
 		pos	 = index(trim(filename),"HS_H09_")
-		if (pos .gt. 0) then
+		if (pos > 0) then
 		    satnum = 102
 		elseif (ahi_main%archive_struct .eqv. .false.) then
 			status = HIMAWARI_FAILURE
@@ -114,7 +114,7 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
 	ahi_main%inchans(:) = 0
 
 	do i=1,n_bands
-		if(band_ids(i)>0 .and. band_ids(i).le.HIMAWARI_NCHANS)ahi_main%inchans(band_ids(i)) = 1
+		if(band_ids(i)>0 .and. band_ids(i)<=HIMAWARI_NCHANS)ahi_main%inchans(band_ids(i)) = 1
 	enddo
 
 	ahi_main%convert=HIMAWARI_UNIT_RBT
@@ -128,9 +128,9 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
 
 	endif
 
-	if (ahi_main%ahi_data%memory_alloc_d.ne.1) then
+	if (ahi_main%ahi_data%memory_alloc_d/=1) then
 		retval = AHI_alloc_vals(ahi_main,ahi_extent,verbose)
-		if (retval.ne.HIMAWARI_SUCCESS) then
+		if (retval/=HIMAWARI_SUCCESS) then
 			status = HIMAWARI_FAILURE
 			return
 		endif
@@ -139,33 +139,33 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
 	endif
 
 	retval = AHI_Setup_Read_Chans(ahi_main,verbose)
-	if (retval.ne.HIMAWARI_SUCCESS) then
+	if (retval/=HIMAWARI_SUCCESS) then
 		status = HIMAWARI_FAILURE
 		return
 	endif
-	if (do_geo.eq.1) then
+	if (do_geo==1) then
 		if (.not. predef_geo) then
 			if(verbose)write(*,*)"Computing lat/lon and satellite angles"
 			retval = AHI_Pix2Geo(ahi_main,verbose)
-			if (retval.ne.HIMAWARI_SUCCESS) then
+			if (retval/=HIMAWARI_SUCCESS) then
 				status = HIMAWARI_FAILURE
 				return
 			endif
 			retval = AHI_calc_satangs(ahi_main,verbose)
-			if (retval.ne.HIMAWARI_SUCCESS) then
+			if (retval/=HIMAWARI_SUCCESS) then
 				status = HIMAWARI_FAILURE
 				return
 			endif
 		else
 			if(verbose)write(*,*)"Retrieving lat/lon and satellite angles from file"
 			retval = AHI_Retrieve_Predef_Geo(ahi_main,geofile,verbose)
-			if (retval.ne.HIMAWARI_SUCCESS) then
+			if (retval/=HIMAWARI_SUCCESS) then
 				status = HIMAWARI_FAILURE
 				return
 			endif
 		endif
 		retval = AHI_Calctime(ahi_main,verbose)
-		if (retval.ne.HIMAWARI_SUCCESS) then
+		if (retval/=HIMAWARI_SUCCESS) then
 			status = HIMAWARI_FAILURE
 			return
 		endif
@@ -183,9 +183,9 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
 	ahi_data2 = ahi_main%ahi_data
 
 
-	if (ahi_main%ahi_data%memory_alloc_d.ne.1) then
+	if (ahi_main%ahi_data%memory_alloc_d/=1) then
 		retval = AHI_free_vals(ahi_main)
-		if (retval.ne.HIMAWARI_SUCCESS) then
+		if (retval/=HIMAWARI_SUCCESS) then
 			status = HIMAWARI_FAILURE
 			return
 		endif
@@ -239,21 +239,21 @@ integer function AHI_Get_SegStart_Point(ahi_main,curseg,verbose) result(status)
 	ahi_main%ahi_extent%startpos(2) = ahi_main%ahi_extent%y_min*2 - ahi_main%ahi_extent%segpos_vi(curseg)
 	ahi_main%ahi_extent%startpos(3) = ahi_main%ahi_extent%y_min*4 - ahi_main%ahi_extent%segpos_hv(curseg)
 
-	if (ahi_main%ahi_extent%startpos(1) .le. 0.) then
+	if (ahi_main%ahi_extent%startpos(1) <= 0.) then
 		ahi_main%ahi_extent%startpos(1) = 1
 		ahi_main%ahi_extent%startpos(2) = 1
 		ahi_main%ahi_extent%startpos(3) = 1
 	endif
 
-	if (ahi_main%ahi_extent%startpos(1) .gt. ahi_main%ahi_extent%segdel_ir) then
+	if (ahi_main%ahi_extent%startpos(1) > ahi_main%ahi_extent%segdel_ir) then
 		status = HIMAWARI_FAILURE
 		return
 	endif
-	if (ahi_main%ahi_extent%startpos(2) .gt. ahi_main%ahi_extent%segdel_vi) then
+	if (ahi_main%ahi_extent%startpos(2) > ahi_main%ahi_extent%segdel_vi) then
 		status = HIMAWARI_FAILURE
 		return
 	endif
-	if (ahi_main%ahi_extent%startpos(3) .gt. ahi_main%ahi_extent%segdel_hv) then
+	if (ahi_main%ahi_extent%startpos(3) > ahi_main%ahi_extent%segdel_hv) then
 		status = HIMAWARI_FAILURE
 		return
 	endif
@@ -276,19 +276,19 @@ integer function AHI_Get_SegEnd_Point(ahi_main,curseg,verbose) result(status)
 	ahi_main%ahi_extent%endpos(2) = ahi_main%ahi_extent%y_max*2 - ahi_main%ahi_extent%segpos_vi(curseg)
 	ahi_main%ahi_extent%endpos(3) = ahi_main%ahi_extent%y_max*4 - ahi_main%ahi_extent%segpos_hv(curseg)
 
-	if (ahi_main%ahi_extent%endpos(1) .gt. ahi_main%ahi_extent%segdel_ir) ahi_main%ahi_extent%endpos(1) = ahi_main%ahi_extent%segdel_ir
-	if (ahi_main%ahi_extent%endpos(2) .gt. ahi_main%ahi_extent%segdel_vi) ahi_main%ahi_extent%endpos(2) = ahi_main%ahi_extent%segdel_vi
-	if (ahi_main%ahi_extent%endpos(3) .gt. ahi_main%ahi_extent%segdel_hv) ahi_main%ahi_extent%endpos(3) = ahi_main%ahi_extent%segdel_hv
+	if (ahi_main%ahi_extent%endpos(1) > ahi_main%ahi_extent%segdel_ir) ahi_main%ahi_extent%endpos(1) = ahi_main%ahi_extent%segdel_ir
+	if (ahi_main%ahi_extent%endpos(2) > ahi_main%ahi_extent%segdel_vi) ahi_main%ahi_extent%endpos(2) = ahi_main%ahi_extent%segdel_vi
+	if (ahi_main%ahi_extent%endpos(3) > ahi_main%ahi_extent%segdel_hv) ahi_main%ahi_extent%endpos(3) = ahi_main%ahi_extent%segdel_hv
 
-	if (ahi_main%ahi_extent%endpos(1) .le. 0.) then
+	if (ahi_main%ahi_extent%endpos(1) <= 0.) then
 		status = HIMAWARI_FAILURE
 		return
 	endif
-	if (ahi_main%ahi_extent%endpos(2) .le. 0.) then
+	if (ahi_main%ahi_extent%endpos(2) <= 0.) then
 		status = HIMAWARI_FAILURE
 		return
 	endif
-	if (ahi_main%ahi_extent%endpos(3) .le. 0.) then
+	if (ahi_main%ahi_extent%endpos(3) <= 0.) then
 		status = HIMAWARI_FAILURE
 		return
 	endif
@@ -317,8 +317,8 @@ integer function AHI_Setup_Segments(ahi_main,verbose) result(status)
 	proc(:) = .false.
 
 	ahi_main%ahi_extent%procseg(:)=.false.
-	where (seg_del_start .gt. (-1. * ahi_main%ahi_extent%segdel_ir)) proc_st = .true.
-	where (seg_del_end .lt. 0. .and. proc_st .eqv. .true.) ahi_main%ahi_extent%procseg=.true.
+	where (seg_del_start > (-1. * ahi_main%ahi_extent%segdel_ir)) proc_st = .true.
+	where (seg_del_end < 0. .and. proc_st .eqv. .true.) ahi_main%ahi_extent%procseg=.true.
 
 	status = HIMAWARI_SUCCESS
 
@@ -353,7 +353,7 @@ integer function AHI_Setup_Read_Chans(ahi_main,verbose) result(status)
 	endif
 
 	retval = AHI_Setup_Segments(ahi_main,verbose)
-	if (retval .ne. HIMAWARI_SUCCESS) then
+	if (retval /= HIMAWARI_SUCCESS) then
 		write(*,*)"Error in AHI_Setup_Segments"
 		stop
 	endif
@@ -373,7 +373,7 @@ integer function AHI_Setup_Read_Chans(ahi_main,verbose) result(status)
 			if (verbose) then
 				write(*,*)"Reading data for channel",i
 			endif
-			if (i.eq.1.or.i.eq.2.or.i.eq.4) then
+			if (i==1.or.i==2.or.i==4) then
 				allocate(tseg(HIMAWARI_VIS_NCOLS,ahi_main%ahi_extent%segdel_vi))
 				tseg(:,:) = him_sreal_fill_value
 				if (ahi_main%vis_res .neqv. .true.) then
@@ -395,7 +395,7 @@ integer function AHI_Setup_Read_Chans(ahi_main,verbose) result(status)
 				segpos = ahi_main%ahi_extent%segpos_vi
 
 				indvar = 2
-			else if (i.eq.3) then
+			else if (i==3) then
 				allocate(tseg(HIMAWARI_HVI_NCOLS,ahi_main%ahi_extent%segdel_hv))
 				if (ahi_main%vis_res .neqv. .true.) then
 					allocate(tdata2(ahi_main%ahi_extent%x_size*4,ahi_main%ahi_extent%y_size*4))
@@ -442,30 +442,30 @@ integer function AHI_Setup_Read_Chans(ahi_main,verbose) result(status)
 					endif
 
 					retval = AHI_Get_SegStart_Point(ahi_main,j,verbose)
-					if (retval .ne. HIMAWARI_SUCCESS) then
+					if (retval /= HIMAWARI_SUCCESS) then
 						write(*,*) "Cannot get segment starting points."
 						status = HIMAWARI_FAILURE
 						return
 					endif
 					retval = AHI_Get_SegEnd_Point(ahi_main,j,verbose)
-					if (retval .ne. HIMAWARI_SUCCESS) then
+					if (retval /= HIMAWARI_SUCCESS) then
 						write(*,*) "Cannot get segment ending points."
 						status = HIMAWARI_FAILURE
 						return
 					endif
 
-					if (j.eq.0) then
+					if (j==0) then
 						retval = AHI_get_file_name(i,ahi_main%ahi_info%timeslot,ahi_main%ahi_info%satnum,ahi_main%ahi_info%indir,fname,verbose)
 					else
 						retval = AHI_get_file_name_seg(i,j,ahi_main%ahi_info%timeslot,ahi_main%ahi_info%satnum,ahi_main%ahi_info%indir,fname,verbose)
 					endif
-					if (retval.ne.HIMAWARI_SUCCESS) then
+					if (retval/=HIMAWARI_SUCCESS) then
 						write(*,*)"Cannot get filename for band: ",i
 						status = HIMAWARI_FAILURE
 						return
 					endif
 					retval = ahi_file_exists(fname,verbose)
-					if (retval.ne.HIMAWARI_SUCCESS) then
+					if (retval/=HIMAWARI_SUCCESS) then
 						write(*,*)"File does not exist: ",fname
 						status = HIMAWARI_FAILURE
 						return
@@ -483,7 +483,7 @@ integer function AHI_Setup_Read_Chans(ahi_main,verbose) result(status)
 
 					cur_y = y_end + 1
 
-					if (retval.ne.HIMAWARI_SUCCESS) then
+					if (retval/=HIMAWARI_SUCCESS) then
 						write(*,*)"Failed to read the channel: ",i
 						status = HIMAWARI_FAILURE
 						return
@@ -492,7 +492,7 @@ integer function AHI_Setup_Read_Chans(ahi_main,verbose) result(status)
 			enddo
             ahi_main%ahi_data%cal_slope(bandpos) = cal_gain_tmp
 			retval = AHI_resample_hres(tdata2, ahi_main%ahi_data%indata(:,:,bandpos),ahi_main%ahi_extent,xsize,ysize,verbose)
-			if (retval.ne.HIMAWARI_SUCCESS) then
+			if (retval/=HIMAWARI_SUCCESS) then
 				write(*,*)"Cannot resample data for channel: ",i
 				deallocate(tdata2)
 				deallocate(tseg)
@@ -537,11 +537,11 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 
 	bval = band
 
-	if (band.eq.1.or.band.eq.2.or.band.eq.4) then
+	if (band==1.or.band==2.or.band==4) then
 		open(newunit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
 		arrxs = HIMAWARI_VIS_NLINES/10
 		arrys = HIMAWARI_VIS_NCOLS
-	else if (band.eq.3) then
+	else if (band==3) then
 		open(newunit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
 		arrxs = HIMAWARI_HVI_NLINES/10
 		arrys = HIMAWARI_HVI_NCOLS
@@ -555,7 +555,7 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 	allocate(tdata2(arrys,arrxs))
 	allocate(temp3(arrys,arrxs))
 
-	if (band.lt.7) then
+	if (band<7) then
 		retval = AHI_readhdr_VIS(filelun,ahi_hdrvis,verbose)
 		gain = ahi_hdrvis%him_calib%gain_cnt2rad
 		offset = ahi_hdrvis%him_calib%cnst_cnt2rad
@@ -579,7 +579,7 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 		ahi_nav%lfac = ceiling((ahi_nav%lfac)/2)
 		ahi_nav%coff = (ahi_nav%coff-0.5)/2
 		ahi_nav%loff = (ahi_nav%loff-0.5)/2
-		if (band.eq.3) then
+		if (band==3) then
 			ahi_nav%cfac = ceiling(ahi_nav%cfac/2)
 			ahi_nav%lfac = ceiling(ahi_nav%lfac/2)
 			ahi_nav%coff = ahi_nav%coff/2
@@ -627,28 +627,28 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 	call fseek(filelun,flen,0,retval)
 	read(filelun)tdata(:,:)
 
-	if (convert.eq.HIMAWARI_UNIT_RAD .or. convert.eq.HIMAWARI_UNIT_RBT) then
+	if (convert==HIMAWARI_UNIT_RAD .or. convert==HIMAWARI_UNIT_RBT) then
 		tdata2 = float(tdata) * gain + offset
 
 		if (convert == HIMAWARI_UNIT_RBT) then
 			if (band<7) then
 				tdata2 = tdata2*c0
-				where(tdata2.lt. -10.0) tdata2=him_sreal_fill_value
-				where(tdata2.gt. 10.0) tdata2=him_sreal_fill_value
+				where(tdata2< -10.0) tdata2=him_sreal_fill_value
+				where(tdata2> 10.0) tdata2=him_sreal_fill_value
 			else
 				temp = (lspd*plnk)/(bolz*clamb/1e6);
 				temp2 = (2.0*lspd*lspd*plnk)/((clamb/1e6)**5)
 				temp3 = log(temp2/(tdata2*1e6)+1)
 				tdata2 = temp / temp3;
 				tdata2 = c0 + c1*tdata2 + c2*tdata2*tdata2
-				where(tdata2.le. 140.0) tdata2=him_sreal_fill_value
-				where(tdata2.gt. 400.0) tdata2=him_sreal_fill_value
+				where(tdata2<= 140.0) tdata2=him_sreal_fill_value
+				where(tdata2> 400.0) tdata2=him_sreal_fill_value
 			endif
 		endif
 	else
 		tdata2 = float(tdata)
 	endif
-	where(tdata.le.0)tdata2=him_sreal_fill_value
+	where(tdata<=0)tdata2=him_sreal_fill_value
 	indata = tdata2
 
 	close(filelun)
@@ -687,7 +687,7 @@ integer function AHI_resample_hres(indata, outdata,ahi_extent,xsize,ysize,verbos
 	integer  :: inpix
 	integer :: n_threads
 
-	if (ahi_extent%x_size .eq. xsize .or. ahi_extent%y_size .eq. ysize) then
+	if (ahi_extent%x_size == xsize .or. ahi_extent%y_size == ysize) then
 		outdata = indata
 		status = HIMAWARI_SUCCESS
 		return
@@ -721,19 +721,17 @@ integer function AHI_resample_hres(indata, outdata,ahi_extent,xsize,ysize,verbos
 			!$acc loop collapse(2)
 			do i=1,sizerx
 				do j=1,sizery
-					if (indata(x+i,y+j).gt.-100) then
+					if (indata(x+i,y+j)>-100) then
 						val = val + indata(x+i,y+j)
 						inpix = inpix + 1
 					endif
 				enddo
 			enddo
 			val = val/inpix
-			if (outx .le. 0 .or. outx .ge. HIMAWARI_IR_NLINES .or. &
-			    outy .le. 0 .or. outy .ge. HIMAWARI_IR_NCOLS) then
-			    	continue
-			endif
+			if (outx <= 0 .or. outx >= HIMAWARI_IR_NLINES .or. &
+			    outy <= 0 .or. outy >= HIMAWARI_IR_NCOLS) then
 
-			if (temparr(outx,outy).le. 0) then
+			elseif (temparr(outx,outy)<= 0) then
 				temparr(outx,outy)=val
 			endif
 		enddo
@@ -771,7 +769,7 @@ integer function AHI_SavetoNCDF(outdata,ahi_extent,fname,bname,newfile,verbose) 
 	nx = ahi_extent%x_size
 	ny = ahi_extent%y_size
 
-	if (newfile.eq.1) then
+	if (newfile==1) then
 		call AHI_NCDF_check(nf90_create(fname, NF90_CLOBBER, ncid))
 		call AHI_NCDF_check(nf90_def_dim(ncid, "x", nx, x_dimid))
 		call AHI_NCDF_check(nf90_def_dim(ncid, "y", ny, y_dimid))
@@ -811,7 +809,7 @@ integer function AHI_SavetoNCDF_int(outdata,ahi_extent,fname,bname,newfile,verbo
 	nx = ahi_extent%x_size
 	ny = ahi_extent%y_size
 
-	if (newfile.eq.1) then
+	if (newfile==1) then
 		call AHI_NCDF_check(nf90_create(fname, NF90_CLOBBER, ncid))
 		call AHI_NCDF_check(nf90_def_dim(ncid, "x", NX, x_dimid))
 		call AHI_NCDF_check(nf90_def_dim(ncid, "y", NY, y_dimid))

@@ -21,7 +21,7 @@ module himawari_headerinfo
 	private
 
 	public ::	himawari_t_Basic_Info, &
-			himawari_t_Data_Info, &
+			    himawari_t_Data_Info, &
     			himawari_t_Proj_Info, &
     			himawari_t_Navi_Info, &
     			himawari_t_Calib_Info, &
