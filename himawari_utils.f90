@@ -218,11 +218,6 @@ integer function AHI_get_file_name(cnum, timeslot, satnum, indir, outfile,verbos
 	character(len=*), intent(in) :: indir
 	character(len=*), intent(out) :: outfile
 	logical, intent(in) :: verbose
-	
-	print*,cnum
-	print*,timeslot
-	print*,satnum
-	print*,indir
 
 	if (satnum .eq. 101) then
 		outfile = trim(outfile)//trim("himawari8")
