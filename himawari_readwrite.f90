@@ -33,50 +33,75 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
                                do_solar, vis_res, satposstr, &
                                do_solar_angles, verbose) result(status)
 
-	character(len=*), intent(in)				::	filename
-	character(len=*), intent(in)				::	geofile
-	type(himawari_t_data), intent(inout)	::	ahi_data2
-	type(himawari_t_extent), intent(inout)	::	ahi_extent
-	integer,intent(in)							::	n_bands
-	integer,intent(in),dimension(16)			::	band_ids
-	integer,intent(in)							::	do_not_alloc
-	integer,intent(in)							::	do_geo
-	logical,intent(in)							:: predef_geo
-	logical,intent(in)							:: do_solar
-	logical,intent(in)							:: vis_res
-	character(len=128), intent(inout)		::	satposstr
-	logical,intent(in)							:: do_solar_angles
-	logical,intent(in)							:: verbose
+	character(len=*), intent(in) :: filename
+	character(len=*), intent(in) :: geofile
+	type(himawari_t_data), intent(inout) :: ahi_data2
+	type(himawari_t_extent), intent(inout) :: ahi_extent
+	integer,intent(in) :: n_bands
+	integer,intent(in),dimension(16) :: band_ids
+	integer,intent(in) :: do_not_alloc
+	integer,intent(in) :: do_geo
+	logical,intent(in) :: predef_geo
+	logical,intent(in) :: do_solar
+	logical,intent(in) :: vis_res
+	character(len=128), intent(inout) :: satposstr
+	logical,intent(in) :: do_solar_angles
+	logical,intent(in) :: verbose
 
-	integer											::	satnum
-	character(len=HIMAWARI_CHARLEN)			::	timeslot
-	character(len=HIMAWARI_CHARLEN)			::	indir
-	integer,dimension(HIMAWARI_NCHANS)		::	inbands
-	type(himawari_t_struct)						::	ahi_main
-	character(len=HIMAWARI_CHARLEN)			::	satlat,satlon,sathei,eqrrad,polrad
+	character(len=16) :: dtstr
+	integer :: satnum, dotpos
+	character(len=HIMAWARI_CHARLEN) :: timeslot
+	character(len=HIMAWARI_CHARLEN) :: indir
+	integer,dimension(HIMAWARI_NCHANS) :: inbands
+	type(himawari_t_struct) :: ahi_main
+	character(len=HIMAWARI_CHARLEN) :: satlat, satlon, sathei, eqrrad, polrad
 
-	integer		::	i,retval,pos
+	integer :: i,retval,pos
 
+    ! Check file format
+    ! If a dot is present, assume it's from ".DAT" in the filename.
+    ! Input filename is therefore an HSD file.
+    ! Otherwise, assume filename is actually a top-level directory
+    ! with band number subdirectories (B01, B02, etc)
+    dotpos = scan(trim(filename),".", BACK= .true.)
+    if (dotpos .gt. 0) then
+        ahi_main%archive_struct = .false.
+    else
+        ahi_main%archive_struct = .true.
+    endif
 
-	satnum = 101
+	satnum = -99
 	pos	 = index(trim(filename),"HS_H08_")
-	if (pos .le. 0) then
+	if (pos .gt. 0) then
+	    satnum = 101
+	else
 		pos	 = index(trim(filename),"HS_H09_")
-		if (pos .le. 0) then
+		if (pos .gt. 0) then
+		    satnum = 102
+		elseif (ahi_main%archive_struct .eqv. .false.) then
 			status = HIMAWARI_FAILURE
 			return
+		else
+		    satnum = 100
 		endif
-		satnum = 102
 	endif
 
 	ahi_main%ahi_data%memory_alloc_d = do_not_alloc
-	ahi_main%ahi_data%n_bands	 = n_bands
+	ahi_main%ahi_data%n_bands = n_bands
 	ahi_main%ahi_extent = ahi_extent
+	! If processing HSD file directly, extract directory and timeslot
+    if (ahi_main%archive_struct .eqv. .false.) then
+	    retval = AHI_get_timeslot(filename, timeslot)
+	    retval = AHI_get_indir(filename, indir)
+	! Otherwise, we have to make some assumptions
+	else
+	    dotpos = scan(trim(filename),"/", BACK= .true.)
+	    dtstr = filename(dotpos - 15:dotpos)
+	    timeslot = dtstr(1:10) // dtstr(14:15)
+	    indir = filename
+	endif
 
-	retval = AHI_get_timeslot(filename,timeslot)
-	retval = AHI_get_indir(filename,indir)
-
-	ahi_main%ahi_info%indir	 = indir
+	ahi_main%ahi_info%indir = indir
 	ahi_main%ahi_info%timeslot = timeslot
 	ahi_main%ahi_info%satnum = satnum
 
@@ -175,12 +200,12 @@ integer function AHI_Retrieve_Predef_Geo(ahi_main,geofile,verbose) result(status
 	use netcdf
 	implicit none
 
-	type(himawari_t_struct), intent(inout)		::	ahi_main
-	character(len=*), intent(in)			      ::	geofile
-	logical,intent(in)								:: verbose
+	type(himawari_t_struct), intent(inout) :: ahi_main
+	character(len=*), intent(in) :: geofile
+	logical,intent(in) :: verbose
 
-	integer						::	ncid, varid
-	integer,dimension(2)		::	start,countval
+	integer :: ncid, varid
+	integer,dimension(2) :: start, countval
 
 	start(1) = ahi_main%ahi_extent%x_min
 	start(2) = ahi_main%ahi_extent%y_min
@@ -285,8 +310,8 @@ integer function AHI_Setup_Segments(ahi_main,verbose) result(status)
 	logical,dimension(10)						::	proc_st
 	logical,dimension(10)						::	proc
 
-	seg_del_start  = ahi_main%ahi_extent%segpos_ir - ahi_main%ahi_extent%y_min
-	seg_del_end  = ahi_main%ahi_extent%segpos_ir - ahi_main%ahi_extent%y_max
+	seg_del_start = ahi_main%ahi_extent%segpos_ir - ahi_main%ahi_extent%y_min
+	seg_del_end = ahi_main%ahi_extent%segpos_ir - ahi_main%ahi_extent%y_max
 
 	proc_st(:) = .false.
 	proc(:) = .false.
@@ -757,7 +782,7 @@ integer function AHI_SavetoNCDF(outdata,ahi_extent,fname,bname,newfile,verbose) 
 		call AHI_NCDF_check(nf90_inq_dimid(ncid, 'y', y_dimid))
 	endif
 
-	dimids =  (/ x_dimid, y_dimid /)
+	dimids = (/ x_dimid, y_dimid /)
 	call AHI_NCDF_check(nf90_def_var(ncid,bname, NF90_FLOAT, dimids, varid))
 	call AHI_NCDF_check(nf90_enddef(ncid))
 	call AHI_NCDF_check(nf90_put_var(ncid, varid, outdata))
@@ -795,7 +820,7 @@ integer function AHI_SavetoNCDF_int(outdata,ahi_extent,fname,bname,newfile,verbo
 		call AHI_NCDF_check(nf90_redef(ncid))
 	endif
 
-	dimids =  (/ x_dimid, y_dimid /)
+	dimids = (/ x_dimid, y_dimid /)
 	call AHI_NCDF_check(nf90_def_var(ncid,bname, NF90_SHORT, dimids, varid))
 	call AHI_NCDF_check(nf90_enddef(ncid))
 	call AHI_NCDF_check(nf90_put_var(ncid, varid, outdata))
