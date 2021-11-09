@@ -96,6 +96,10 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
 	! Otherwise, we have to make some assumptions
 	else
 	    dotpos = scan(trim(filename),"/", BACK= .true.)
+	    if (dotpos < 16) then
+	        print*,"ERROR: Input directory name not in archive format:", trim(filename)
+	        stop
+	    endif
 	    dtstr = filename(dotpos - 15:dotpos)
 	    timeslot = dtstr(1:10) // dtstr(14:15)
 	    indir = filename
