@@ -198,9 +198,9 @@ type	::	himawari_t_ObsTime_Info
 	integer(kind=ahi_byte) 	::	HeaderNum
 	integer(kind=ahi_sint)	::	BlockLen
 	integer(kind=ahi_sint)	::	obsNum
-	integer(kind=ahi_sint)	::	lineNo
-	real(kind=ahi_dreal)	::	obsMJD
-	character*70			::	spare
+	integer(kind=ahi_sint), allocatable, dimension(:) :: lineNo
+	real(kind=ahi_dreal),   allocatable, dimension(:) :: obsMJD
+	character*40			::	spare
 end type himawari_t_ObsTime_Info
 
    ! We ignore this
