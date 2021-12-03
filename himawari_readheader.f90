@@ -33,7 +33,7 @@ integer function AHI_readhdr_IR(filelun,ahi_hdr,verbose)result(status)
 	integer,intent(in)							::	filelun
 	logical, intent(in)							:: verbose
 
-	integer ::	retval,fpos
+	integer ::	retval, fpos, i
 
 	type(himawari_t_Basic_Info)		::	him_basic
 	type(himawari_t_Data_Info)		::	him_data
@@ -81,7 +81,20 @@ integer function AHI_readhdr_IR(filelun,ahi_hdr,verbose)result(status)
 	fpos	=	fpos + him_seg%BlockLen
 	call	fseek(filelun,fpos,0,retval)
 
-	read(filelun)him_navcorr
+	read(filelun)him_navcorr%HeaderNum
+	read(filelun)him_navcorr%BlockLen
+	read(filelun)him_navcorr%RoCenterColumn
+	read(filelun)him_navcorr%RoCenterLine
+	read(filelun)him_navcorr%RoCorrection
+	read(filelun)him_navcorr%correctNum
+	allocate(him_navcorr%lineNo(him_navcorr%correctNum))
+	allocate(him_navcorr%columnShift(him_navcorr%correctNum))
+	allocate(him_navcorr%lineShift(him_navcorr%correctNum))
+	do i = 1, him_navcorr%correctNum
+		read(filelun)him_navcorr%lineNo(i)
+		read(filelun)him_navcorr%columnShift(i)
+		read(filelun)him_navcorr%lineShift(i)
+	end do
 	fpos	=	fpos + him_navcorr%BlockLen
 	call	fseek(filelun,fpos,0,retval)
 
@@ -116,7 +129,7 @@ integer function AHI_readhdr_VIS(filelun,ahi_hdr,verbose)result(status)
 	integer,intent(in)								::	filelun
 	logical, intent(in)								:: verbose
 
-	integer ::	retval,fpos
+	integer ::	retval, fpos, i
 
 	type(himawari_t_Basic_Info)		::	him_basic
 	type(himawari_t_Data_Info)		::	him_data
@@ -164,7 +177,20 @@ integer function AHI_readhdr_VIS(filelun,ahi_hdr,verbose)result(status)
 	fpos	=	fpos + him_seg%BlockLen
 	call	fseek(filelun,fpos,0,retval)
 
-	read(filelun)him_navcorr
+	read(filelun)him_navcorr%HeaderNum
+	read(filelun)him_navcorr%BlockLen
+	read(filelun)him_navcorr%RoCenterColumn
+	read(filelun)him_navcorr%RoCenterLine
+	read(filelun)him_navcorr%RoCorrection
+	read(filelun)him_navcorr%correctNum
+	allocate(him_navcorr%lineNo(him_navcorr%correctNum))
+	allocate(him_navcorr%columnShift(him_navcorr%correctNum))
+	allocate(him_navcorr%lineShift(him_navcorr%correctNum))
+	do i = 1, him_navcorr%correctNum
+		read(filelun)him_navcorr%lineNo(i)
+		read(filelun)him_navcorr%columnShift(i)
+		read(filelun)him_navcorr%lineShift(i)
+	end do
 	fpos	=	fpos + him_navcorr%BlockLen
 	call	fseek(filelun,fpos,0,retval)
 

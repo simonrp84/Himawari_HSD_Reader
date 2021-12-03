@@ -155,16 +155,18 @@ end type himawari_t_VIS_Calib_Info
 type	::	himawari_t_InterCalib_Info
 	integer(kind=ahi_byte) 	::	HeaderNum
 	integer(kind=ahi_sint)	::	BlockLen
-	real(kind=ahi_dreal)	::	gsicsCorr_C
-	real(kind=ahi_dreal)	::	gsicsCorr_C_er
-	real(kind=ahi_dreal)	::	gsicsCorr_1
-	real(kind=ahi_dreal)	::	gsicsCorr_1_er
-	real(kind=ahi_dreal)	::	gsicsCorr_2
-	real(kind=ahi_dreal)	::	gsicsCorr_2_er
-	real(kind=ahi_dreal)	::	gsicsBias
-	real(kind=ahi_dreal)	::	gsicsUncert
-	character*64			::	gsicsCorrInfo
-	character*128			::	spare
+	real(kind=ahi_dreal)	::	gsics_cal_off
+	real(kind=ahi_dreal)	::	gsics_cal_slo
+	real(kind=ahi_dreal)	::	gsics_cal_quad
+	real(kind=ahi_dreal)	::	gsics_radbias
+	real(kind=ahi_dreal)	::	gsics_radbias_uncert
+	real(kind=ahi_dreal)	::	gsics_standard_rad
+	real(kind=ahi_dreal)	::	gsics_valid_start
+	real(kind=ahi_dreal)	::	gsics_valid_end
+	real(kind=ahi_sreal)	::  gsics_radlim_upper
+	real(kind=ahi_sreal)	::	gsics_radlim_lower
+	character*128			::	gsicsCorrInfo
+	character*56			::	spare
 end type himawari_t_InterCalib_Info
 
    ! Per-segment info. Is constant so we ignore it
@@ -177,7 +179,7 @@ type	::	himawari_t_Segm_Info
 	character*40			::	spare
 end type himawari_t_Segm_Info
 
-   ! Not used by us, relates to L1.0 -> L1.5 proc
+   ! Navigation correction data
 type	::	himawari_t_NaviCorr_Info
 	integer(kind=ahi_byte) 	::	HeaderNum
 	integer(kind=ahi_sint)	::	BlockLen
@@ -185,10 +187,10 @@ type	::	himawari_t_NaviCorr_Info
 	real(kind=ahi_sreal)	::	RoCenterLine
 	real(kind=ahi_dreal)	::	RoCorrection
 	integer(kind=ahi_sint)	::	correctNum
-	integer(kind=ahi_sint)	::	lineNo
-	real(kind=ahi_sreal)	::	columnShift
-	real(kind=ahi_sreal)	::	lineShift
-	character*50			::	spare
+	integer(kind=ahi_sint), allocatable, dimension(:) :: lineNo
+	real(kind=ahi_sreal),   allocatable, dimension(:) :: columnShift
+	real(kind=ahi_sreal),   allocatable, dimension(:) :: lineShift
+	character*40			::	spare
 end type himawari_t_NaviCorr_Info
 
    ! Observation info, useful for computing SZA/SAA
