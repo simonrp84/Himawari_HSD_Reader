@@ -709,13 +709,17 @@ integer function AHI_resample_hres(indata, outdata,ahi_extent,xsize,ysize,verbos
 		n_threads = omp_get_max_threads()
 		write(*,*) 'Resampling VIS grid to IR grid using',n_threads,'threads'
 	endif
-!$omp parallel DO PRIVATE(x,y,outx,outy,val,inpix)
 #else
 	if (verbose)write(*,*) 'Resampling VIS grid to IR grid without threading'
 #endif
 #endif
+#ifdef _OPENMP
+!$omp parallel DO PRIVATE(x,y,outx,outy,val,inpix)
+#endif
+#ifdef __PGI 
 !$acc kernels
 !$acc loop collapse(2) independent private(x,y,i,j,outx,outy,val,inpix)
+#endif
 	do x=1,xsize-sizerx
 		do y=1,ysize-sizery
 			outx = int(x/sizerx)+1
