@@ -146,7 +146,10 @@ end type himawari_t_IR_Calib_Info
    ! Specific valib info for the VIS/NIR bands
 type	::	himawari_t_VIS_Calib_Info
 	real(kind=ahi_dreal)	::	rad2albedo
-	character*104			::	spare
+	real(kind=ahi_dreal)	::	CalUpdTime
+	real(kind=ahi_dreal)	::	Upd_gain_cnt2rad
+	real(kind=ahi_dreal)	::	Upd_cnst_cnt2rad
+	character*80			::	spare
 end type himawari_t_VIS_Calib_Info
 
 type	::	himawari_t_InterCalib_Info
