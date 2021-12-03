@@ -46,8 +46,8 @@ type	::	himawari_t_Basic_Info
 	integer(kind=ahi_byte)	::	byteOrder
 	character*16			::	satName
 	character*16			::	proName
-	character*4				::	ObsType1
-	character*2				::	ObsType2
+	character*4				::	ObsArea
+	character*2				::	ObsInfo
 	integer(kind=ahi_sint)	::	TimeLine
 	real(kind=ahi_dreal)	::	ObsStartTime
 	real(kind=ahi_dreal)	::	ObsEndTime
