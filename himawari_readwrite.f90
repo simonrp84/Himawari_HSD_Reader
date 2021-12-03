@@ -563,7 +563,7 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 		retval = AHI_readhdr_VIS(filelun,ahi_hdrvis,verbose)
 		gain = ahi_hdrvis%him_calib%gain_cnt2rad
 		offset = ahi_hdrvis%him_calib%cnst_cnt2rad
-		clamb = ahi_hdrvis%him_calib%waveLen
+		clamb = ahi_hdrvis%him_calib%CenWaveLen
 		c0 = ahi_hdrvis%him_chan_calib%rad2albedo
 		ahi_nav%subLon = ahi_hdrvis%him_proj%subLon
 		ahi_nav%cfac = ahi_hdrvis%him_proj%cfac
@@ -599,7 +599,7 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 		retval = AHI_readhdr_IR(filelun,ahi_hdrir,verbose)
 		gain = ahi_hdrir%him_calib%gain_cnt2rad
 		offset = ahi_hdrir%him_calib%cnst_cnt2rad
-		clamb = ahi_hdrir%him_calib%waveLen
+		clamb = ahi_hdrir%him_calib%CenWaveLen
 		c0 = ahi_hdrir%him_chan_calib%btp2rad_c0
 		c1 = ahi_hdrir%him_chan_calib%btp2rad_c1
 		c2 = ahi_hdrir%him_chan_calib%btp2rad_c2

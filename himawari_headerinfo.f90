@@ -61,7 +61,6 @@ type	::	himawari_t_Basic_Info
 	character*32			::	verName
 	character*128			::	fileName
 	character*40			::	spare
-
 end type	himawari_t_Basic_Info
 
 	! Some more basic info, mostly unused by us
@@ -121,7 +120,7 @@ type	::	himawari_t_Calib_Info
 	integer(kind=ahi_byte) 	::	HeaderNum
 	integer(kind=ahi_sint)	::	BlockLen
 	integer(kind=ahi_sint)	::	bandNo
-	real(kind=ahi_dreal)	::	waveLen
+	real(kind=ahi_dreal)	::	CenWaveLen
 	integer(kind=ahi_sint)	::	bitPix
 	integer(kind=ahi_sint)	::	errorCount
 	integer(kind=ahi_sint)	::	outCount
