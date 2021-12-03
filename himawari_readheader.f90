@@ -110,7 +110,15 @@ integer function AHI_readhdr_IR(filelun,ahi_hdr,verbose)result(status)
 	fpos	=	fpos + him_obstime%BlockLen
 	call	fseek(filelun,fpos,0,retval)
 
-	read(filelun)him_error
+	read(filelun)him_error%HeaderNum
+	read(filelun)him_error%BlockLen
+	read(filelun)him_error%errorNum
+	allocate(him_error%lineNo(him_error%errorNum))
+	allocate(him_error%errPixNum(him_error%errorNum))
+	do i = 1, him_error%errorNum
+		read(filelun)him_error%lineNo(i)
+		read(filelun)him_error%errPixNum(i)
+	end do
 	fpos	=	fpos + him_error%BlockLen
 	call	fseek(filelun,fpos,0,retval)
 
@@ -214,7 +222,15 @@ integer function AHI_readhdr_VIS(filelun,ahi_hdr,verbose)result(status)
 	fpos	=	fpos + him_obstime%BlockLen
 	call	fseek(filelun,fpos,0,retval)
 
-	read(filelun)him_error
+	read(filelun)him_error%HeaderNum
+	read(filelun)him_error%BlockLen
+	read(filelun)him_error%errorNum
+	allocate(him_error%lineNo(him_error%errorNum))
+	allocate(him_error%errPixNum(him_error%errorNum))
+	do i = 1, him_error%errorNum
+		read(filelun)him_error%lineNo(i)
+		read(filelun)him_error%errPixNum(i)
+	end do
 	fpos	=	fpos + him_error%BlockLen
 	call	fseek(filelun,fpos,0,retval)
 

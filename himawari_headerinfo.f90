@@ -203,13 +203,13 @@ type	::	himawari_t_ObsTime_Info
 	character*40			::	spare
 end type himawari_t_ObsTime_Info
 
-   ! We ignore this
+   ! We read but do not use this
 type	::	himawari_t_Error_Info
 	integer(kind=ahi_byte)	::	HeaderNum
-	integer(kind=ahi_sint)	::	BlockLen
+	integer(kind=ahi_lint)	::	BlockLen
 	integer(kind=ahi_sint)	::	errorNum
-	integer(kind=ahi_sint)	::	lineNo
-	integer(kind=ahi_sint)  ::	errPixNum
+	integer(kind=ahi_sint), allocatable, dimension(:) :: lineNo
+	integer(kind=ahi_sint), allocatable, dimension(:) :: errPixNum
 	character*40			::	spare
 end type himawari_t_Error_Info
 
