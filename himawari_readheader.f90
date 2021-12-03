@@ -238,11 +238,11 @@ integer function AHI_readhdr_VIS(filelun,ahi_hdr,verbose)result(status)
 
 	ahi_hdr%him_basic		=	him_basic
 	ahi_hdr%him_proj		=	him_proj
-	ahi_hdr%him_nav		=	him_nav
+	ahi_hdr%him_nav			=	him_nav
 	ahi_hdr%him_calib		=	him_calib
 	ahi_hdr%him_chan_calib	=	him_chan_calib
 	ahi_hdr%him_interCalib	=	him_interCalib
-	ahi_hdr%him_seg		=	him_seg
+	ahi_hdr%him_seg			=	him_seg
 	ahi_hdr%him_navcorr		=	him_navcorr
 	ahi_hdr%him_obstime		=	him_obstime
 	ahi_hdr%him_error		=	him_error

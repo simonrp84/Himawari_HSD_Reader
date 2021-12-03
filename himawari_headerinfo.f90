@@ -217,7 +217,7 @@ end type himawari_t_Error_Info
 type	::	himawari_t_Spare
 	integer(kind=ahi_byte)	::	HeaderNum
 	integer(kind=ahi_sint)	::	BlockLen
-	character*40			::	spare
+	character*256			::	spare
 end type himawari_t_Spare
 
 !/* navigation correction information table */
