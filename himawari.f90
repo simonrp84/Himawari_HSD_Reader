@@ -160,6 +160,7 @@ module himawari
         logical :: do_solar_angles
         logical :: vis_res
         logical :: archive_struct
+        logical :: upd_cal
     end type himawari_t_struct
 
 end module himawari

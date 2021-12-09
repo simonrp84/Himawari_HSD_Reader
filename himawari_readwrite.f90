@@ -31,7 +31,7 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
                                ahi_extent, n_bands, band_ids,&
                                do_not_alloc, do_geo, predef_geo, &
                                do_solar, vis_res, satposstr, &
-                               do_solar_angles, verbose) result(status)
+                               do_solar_angles, upd_cal, verbose) result(status)
 
 	character(len=*), intent(in) :: filename
 	character(len=*), intent(in) :: geofile
@@ -46,6 +46,7 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
 	logical,intent(in) :: vis_res
 	character(len=128), intent(inout) :: satposstr
 	logical,intent(in) :: do_solar_angles
+	logical,intent(in) :: upd_cal
 	logical,intent(in) :: verbose
 
 	character(len=16) :: dtstr
@@ -112,6 +113,7 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
 	ahi_main%vis_res = vis_res
 	ahi_main%do_solar = do_solar
 	ahi_main%do_solar_angles = do_solar_angles
+	ahi_main%upd_cal = upd_cal
 
 	if (verbose) write(*,*)"Reading AHI data for ",trim(ahi_main%ahi_info%timeslot(1:12))
 
@@ -129,6 +131,11 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
 		write(*,*)"			X: ",ahi_main%ahi_extent%x_min," to ", ahi_main%ahi_extent%x_max
 		write(*,*)"			Y: ",ahi_main%ahi_extent%y_min," to ", ahi_main%ahi_extent%y_max
 		write(*,*)"	-	Region size is: ",ahi_main%ahi_extent%x_size,"x",ahi_main%ahi_extent%y_size
+        if (ahi_main%upd_cal) then
+    		write(*,*)"	-	Updated (block 6) VIS channel calibration will be used."
+    	else
+        	write(*,*)"	-	Original (block 5) VIS channel calibration will be used."
+        endif
 
 	endif
 
@@ -306,13 +313,13 @@ end function AHI_Get_SegEnd_Point
 integer function AHI_Setup_Segments(ahi_main,verbose) result(status)
 
 	type(himawari_t_struct), intent(inout)	::	ahi_main
-	logical,intent(in)							:: verbose
+	logical,intent(in) :: verbose
 
-	integer,dimension(10)						::	seg_del_start
-	integer,dimension(10)						::	seg_del_end
+	integer,dimension(10) :: seg_del_start
+	integer,dimension(10) :: seg_del_end
 
-	logical,dimension(10)						::	proc_st
-	logical,dimension(10)						::	proc
+	logical,dimension(10) :: proc_st
+	logical,dimension(10) :: proc
 
 	seg_del_start = ahi_main%ahi_extent%segpos_ir - ahi_main%ahi_extent%y_min
 	seg_del_end = ahi_main%ahi_extent%segpos_ir - ahi_main%ahi_extent%y_max
@@ -330,7 +337,7 @@ integer function AHI_Setup_Segments(ahi_main,verbose) result(status)
 
 end function AHI_Setup_Segments
 
-integer function AHI_Setup_Read_Chans(ahi_main,verbose) result(status)
+integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 
 	type(himawari_t_struct), intent(inout) :: ahi_main
 	logical,intent(in) :: verbose
@@ -478,7 +485,7 @@ integer function AHI_Setup_Read_Chans(ahi_main,verbose) result(status)
 					endl = segpos(j)+segdel-1
 					! Note: We get gain for each segment and assume it's the same across all segments to be read.
 					! To my knowledge, this assumption is correct. I've not found any segments with differing gains.
-					retval = AHI_readchan(fname, tseg, i, ahi_main%convert(i), cal_gain_tmp, ahi_main%ahi_navdata, verbose)
+					retval = AHI_readchan(fname, tseg, i, ahi_main%convert(i), cal_gain_tmp, ahi_main%ahi_navdata, ahi_main%upd_cal, verbose)
 
 					y_start = cur_y
 					y_end = cur_y + ahi_main%ahi_extent%endpos(indvar) - ahi_main%ahi_extent%startpos(indvar)
@@ -516,7 +523,7 @@ integer function AHI_Setup_Read_Chans(ahi_main,verbose) result(status)
 
 end function AHI_Setup_Read_Chans
 
-integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, verbose)result(status)
+integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, upd_cal, verbose)result(status)
 
 	character(len=*), intent(in) :: fname
 	real(kind=ahi_sreal), DIMENSION(:,:), intent(inout) :: indata
@@ -525,6 +532,7 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 	real(kind=ahi_sreal), intent(out) :: cal_slope
 	type(himawari_t_navdata), intent(inout) :: ahi_nav
 	
+	logical,intent(in) :: upd_cal
 	logical,intent(in) :: verbose
 
 	integer(2), DIMENSION(:,:), ALLOCATABLE :: tdata
@@ -561,8 +569,13 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 
 	if (band<7) then
 		retval = AHI_readhdr_VIS(filelun,ahi_hdrvis,verbose)
-		gain = ahi_hdrvis%him_calib%gain_cnt2rad
-		offset = ahi_hdrvis%him_calib%cnst_cnt2rad
+		if (upd_cal .eqv. .true.) then
+    		gain = ahi_hdrvis%him_chan_calib%Upd_gain_cnt2rad
+    		offset = ahi_hdrvis%him_chan_calib%Upd_cnst_cnt2rad
+        else
+    		gain = ahi_hdrvis%him_calib%gain_cnt2rad
+    		offset = ahi_hdrvis%him_calib%cnst_cnt2rad
+        endif
 		clamb = ahi_hdrvis%him_calib%CenWaveLen
 		c0 = ahi_hdrvis%him_chan_calib%rad2albedo
 		ahi_nav%subLon = ahi_hdrvis%him_proj%subLon
