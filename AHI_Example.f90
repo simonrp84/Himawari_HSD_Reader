@@ -40,6 +40,10 @@ program AHI_example_f90
 !	logical :: vis_res = .true.
 	logical :: vis_res = .false.
 
+	! Choose where to use updated or original VIS calibration
+!    logical :: new_calib = .false.
+	logical :: new_calib = .true.
+
 	! Filename of the file to be read.
 	character(HIMAWARI_CHARLEN) :: filename
 	! Name of NetCDF file to use for output
@@ -169,6 +173,7 @@ program AHI_example_f90
 	                          vis_res, &
 	                          satposstr, &
 	                          do_solar_angles, &
+	                          new_calib, &
 	                          verbose)
 	if (retval /= HIMAWARI_SUCCESS) then
 		write(*,*)"Error encountered in data reading. Quitting."
