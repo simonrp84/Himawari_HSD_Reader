@@ -572,6 +572,11 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 		if (upd_cal .eqv. .true.) then
     		gain = ahi_hdrvis%him_chan_calib%Upd_gain_cnt2rad
     		offset = ahi_hdrvis%him_chan_calib%Upd_cnst_cnt2rad
+    		 if (ahi_hdrvis%him_chan_calib%Upd_gain_cnt2rad .lt. 0.0001) then
+    		    if (verbose) print*, "WARNING: Updated calibration not available, using default."
+        		gain = ahi_hdrvis%him_calib%gain_cnt2rad
+        		offset = ahi_hdrvis%him_calib%cnst_cnt2rad
+        	endif
         else
     		gain = ahi_hdrvis%him_calib%gain_cnt2rad
     		offset = ahi_hdrvis%him_calib%cnst_cnt2rad
