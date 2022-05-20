@@ -86,6 +86,17 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
 		    satnum = 100
 		endif
 	endif
+	
+	! Check if we're processing older AWS data.
+	! This only has one segment for the full disk.
+    dotpos = index(trim(filename),"S0101")  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!THIS IS BROKEN
+    print*,dotpos
+    print*,trim(filename)
+    if (dotpos > 0) then
+        ahi_main%single_seg = .true.
+    else
+        ahi_main%single_seg = .false.
+    endif
 
 	ahi_main%ahi_data%memory_alloc_d = do_not_alloc
 	ahi_main%ahi_data%n_bands = n_bands
@@ -283,13 +294,19 @@ integer function AHI_Get_SegEnd_Point(ahi_main,curseg,verbose) result(status)
 
 	integer 	:: startline
 
-	ahi_main%ahi_extent%endpos(1) = ahi_main%ahi_extent%y_max - ahi_main%ahi_extent%segpos_ir(curseg)
-	ahi_main%ahi_extent%endpos(2) = ahi_main%ahi_extent%y_max*2 - ahi_main%ahi_extent%segpos_vi(curseg)
-	ahi_main%ahi_extent%endpos(3) = ahi_main%ahi_extent%y_max*4 - ahi_main%ahi_extent%segpos_hv(curseg)
+	if (ahi_main%single_seg .neqv. .true.) then 
+	    ahi_main%ahi_extent%endpos(1) = ahi_main%ahi_extent%y_max - ahi_main%ahi_extent%segpos_ir(curseg)
+	    ahi_main%ahi_extent%endpos(2) = ahi_main%ahi_extent%y_max*2 - ahi_main%ahi_extent%segpos_vi(curseg)
+	    ahi_main%ahi_extent%endpos(3) = ahi_main%ahi_extent%y_max*4 - ahi_main%ahi_extent%segpos_hv(curseg)
 
-	if (ahi_main%ahi_extent%endpos(1) > ahi_main%ahi_extent%segdel_ir) ahi_main%ahi_extent%endpos(1) = ahi_main%ahi_extent%segdel_ir
-	if (ahi_main%ahi_extent%endpos(2) > ahi_main%ahi_extent%segdel_vi) ahi_main%ahi_extent%endpos(2) = ahi_main%ahi_extent%segdel_vi
-	if (ahi_main%ahi_extent%endpos(3) > ahi_main%ahi_extent%segdel_hv) ahi_main%ahi_extent%endpos(3) = ahi_main%ahi_extent%segdel_hv
+	    if (ahi_main%ahi_extent%endpos(1) > ahi_main%ahi_extent%segdel_ir) ahi_main%ahi_extent%endpos(1) = ahi_main%ahi_extent%segdel_ir
+	    if (ahi_main%ahi_extent%endpos(2) > ahi_main%ahi_extent%segdel_vi) ahi_main%ahi_extent%endpos(2) = ahi_main%ahi_extent%segdel_vi
+	    if (ahi_main%ahi_extent%endpos(3) > ahi_main%ahi_extent%segdel_hv) ahi_main%ahi_extent%endpos(3) = ahi_main%ahi_extent%segdel_hv
+	else
+	    ahi_main%ahi_extent%endpos(1) = ahi_main%ahi_extent%y_max
+	    ahi_main%ahi_extent%endpos(2) = ahi_main%ahi_extent%y_max*2
+	    ahi_main%ahi_extent%endpos(3) = ahi_main%ahi_extent%y_max*4
+    endif
 
 	if (ahi_main%ahi_extent%endpos(1) <= 0.) then
 		status = HIMAWARI_FAILURE
@@ -321,15 +338,24 @@ integer function AHI_Setup_Segments(ahi_main,verbose) result(status)
 	logical,dimension(10) :: proc_st
 	logical,dimension(10) :: proc
 
-	seg_del_start = ahi_main%ahi_extent%segpos_ir - ahi_main%ahi_extent%y_min
-	seg_del_end = ahi_main%ahi_extent%segpos_ir - ahi_main%ahi_extent%y_max
+	if (ahi_main%single_seg .neqv. .true.) then 
+	    seg_del_start = ahi_main%ahi_extent%segpos_ir - ahi_main%ahi_extent%y_min
+	    seg_del_end = ahi_main%ahi_extent%segpos_ir - ahi_main%ahi_extent%y_max
+    else
+        seg_del_start = ahi_main%ahi_extent%y_min
+        seg_del_end = ahi_main%ahi_extent%y_max
+    endif
 
 	proc_st(:) = .false.
 	proc(:) = .false.
+    ahi_main%ahi_extent%procseg(:)=.false.
 
-	ahi_main%ahi_extent%procseg(:)=.false.
-	where (seg_del_start > (-1. * ahi_main%ahi_extent%segdel_ir)) proc_st = .true.
-	where (seg_del_end < 0. .and. proc_st .eqv. .true.) ahi_main%ahi_extent%procseg=.true.
+	if (ahi_main%single_seg .neqv. .true.) then 
+	    where (seg_del_start > (-1. * ahi_main%ahi_extent%segdel_ir)) proc_st = .true.
+	    where (seg_del_end < 0. .and. proc_st .eqv. .true.) ahi_main%ahi_extent%procseg=.true.
+    else
+        ahi_main%ahi_extent%procseg(1) = .true.
+    endif
 
 	status = HIMAWARI_SUCCESS
 
@@ -370,8 +396,13 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 	endif
 
 	bandpos = 1
-	minseg = 1
-	maxseg = 10
+	if (ahi_main%single_seg .neqv. .true.) then 
+    	minseg = 1
+    	maxseg = 10
+    else
+        minseg = 1
+        maxseg = 1
+    endif
 
 	do i=1,HIMAWARI_NCHANS
 
@@ -385,7 +416,12 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 				write(*,*)"Reading data for channel",i
 			endif
 			if (i==1.or.i==2.or.i==4) then
-				allocate(tseg(HIMAWARI_VIS_NCOLS,ahi_main%ahi_extent%segdel_vi))
+	            if (ahi_main%single_seg .neqv. .true.) then 
+				    allocate(tseg(HIMAWARI_VIS_NCOLS,ahi_main%ahi_extent%segdel_vi))
+				else
+					allocate(tseg(ahi_main%ahi_extent%x_size*2,ahi_main%ahi_extent%y_size*2))
+			    endif
+				
 				tseg(:,:) = him_sreal_fill_value
 				if (ahi_main%vis_res .neqv. .true.) then
 					allocate(tdata2(ahi_main%ahi_extent%x_size*2,ahi_main%ahi_extent%y_size*2))
@@ -406,8 +442,12 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 				segpos = ahi_main%ahi_extent%segpos_vi
 
 				indvar = 2
-			else if (i==3) then
+			else if (i==3)  then
+	            if (ahi_main%single_seg .neqv. .true.) then 
 				allocate(tseg(HIMAWARI_HVI_NCOLS,ahi_main%ahi_extent%segdel_hv))
+				else
+					allocate(tseg(ahi_main%ahi_extent%x_size*4,ahi_main%ahi_extent%y_size*4))
+			    endif
 				if (ahi_main%vis_res .neqv. .true.) then
 					allocate(tdata2(ahi_main%ahi_extent%x_size*4,ahi_main%ahi_extent%y_size*4))
 					xsize = ahi_main%ahi_extent%x_size*4
@@ -427,7 +467,11 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 				segpos = ahi_main%ahi_extent%segpos_hv
 				indvar = 3
 			else
-				allocate(tseg(HIMAWARI_IR_NCOLS,ahi_main%ahi_extent%segdel_ir))
+	            if (ahi_main%single_seg .neqv. .true.) then
+				    allocate(tseg(HIMAWARI_IR_NCOLS,ahi_main%ahi_extent%segdel_ir))
+				else
+					allocate(tseg(ahi_main%ahi_extent%x_size, ahi_main%ahi_extent%y_size))
+			    endif
 				tseg(:,:) = him_sreal_fill_value
 				if (ahi_main%vis_res .neqv. .true.) then
 					allocate(tdata2(ahi_main%ahi_extent%x_size,ahi_main%ahi_extent%y_size))
@@ -468,7 +512,7 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 					if (j==0) then
 						retval = AHI_get_file_name(i,ahi_main%ahi_info%timeslot,ahi_main%ahi_info%satnum,ahi_main%ahi_info%indir,fname,verbose)
 					else
-						retval = AHI_get_file_name_seg(i,j,ahi_main%ahi_info%timeslot,ahi_main%ahi_info%satnum,ahi_main%ahi_info%indir,fname,verbose)
+						retval = AHI_get_file_name_seg(i, j, ahi_main%ahi_info%timeslot, ahi_main%ahi_info%satnum, ahi_main%ahi_info%indir, fname, ahi_main%single_seg, verbose)
 					endif
 					if (retval/=HIMAWARI_SUCCESS) then
 						write(*,*)"Cannot get filename for band: ",i
@@ -485,7 +529,7 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 					endl = segpos(j)+segdel-1
 					! Note: We get gain for each segment and assume it's the same across all segments to be read.
 					! To my knowledge, this assumption is correct. I've not found any segments with differing gains.
-					retval = AHI_readchan(fname, tseg, i, ahi_main%convert(i), cal_gain_tmp, ahi_main%ahi_navdata, ahi_main%upd_cal, verbose)
+					retval = AHI_readchan(fname, tseg, i, ahi_main%convert(i), cal_gain_tmp, ahi_main%ahi_navdata, ahi_main%upd_cal, ahi_main%single_seg, verbose)
 
 					y_start = cur_y
 					y_end = cur_y + ahi_main%ahi_extent%endpos(indvar) - ahi_main%ahi_extent%startpos(indvar)
@@ -523,7 +567,7 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 
 end function AHI_Setup_Read_Chans
 
-integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, upd_cal, verbose)result(status)
+integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, upd_cal, single_seg, verbose)result(status)
 
 	character(len=*), intent(in) :: fname
 	real(kind=ahi_sreal), DIMENSION(:,:), intent(inout) :: indata
@@ -533,6 +577,7 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 	type(himawari_t_navdata), intent(inout) :: ahi_nav
 	
 	logical,intent(in) :: upd_cal
+	logical,intent(in) :: single_seg
 	logical,intent(in) :: verbose
 
 	integer(2), DIMENSION(:,:), ALLOCATABLE :: tdata
@@ -551,15 +596,27 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 
 	if (band==1.or.band==2.or.band==4) then
 		open(newunit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
-		arrxs = HIMAWARI_VIS_NLINES/10
+		if (single_seg .neqv. .true.) then 
+		    arrxs = HIMAWARI_VIS_NLINES/10
+		else
+		    arrxs = HIMAWARI_VIS_NLINES
+		endif
 		arrys = HIMAWARI_VIS_NCOLS
 	else if (band==3) then
 		open(newunit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
-		arrxs = HIMAWARI_HVI_NLINES/10
+		if (single_seg .neqv. .true.) then 
+		    arrxs = HIMAWARI_HVI_NLINES/10
+		else
+		    arrxs = HIMAWARI_HVI_NLINES
+		endif
 		arrys = HIMAWARI_HVI_NCOLS
 	else
 		open(newunit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
-		arrxs = HIMAWARI_IR_NLINES/10
+		if (single_seg .neqv. .true.) then 
+		    arrxs = HIMAWARI_IR_NLINES/10
+		else
+		    arrxs = HIMAWARI_IR_NLINES
+		endif
 		arrys = HIMAWARI_IR_NCOLS
 	endif
 

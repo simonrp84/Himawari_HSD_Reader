@@ -161,6 +161,7 @@ module himawari
         logical :: vis_res
         logical :: archive_struct
         logical :: upd_cal
+        logical :: single_seg
     end type himawari_t_struct
 
 end module himawari

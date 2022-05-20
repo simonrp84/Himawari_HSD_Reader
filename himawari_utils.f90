@@ -276,7 +276,7 @@ integer function AHI_get_file_name(cnum, timeslot, satnum, indir, outfile,verbos
 end function AHI_get_file_name
 
 
-integer function AHI_get_file_name_seg(cnum, seg, timeslot, satnum, indir, outfile, verbose) result(status)
+integer function AHI_get_file_name_seg(cnum, seg, timeslot, satnum, indir, outfile, single_seg, verbose) result(status)
 
 	integer, intent(in) :: cnum
 	integer, intent(in) :: seg
@@ -285,6 +285,7 @@ integer function AHI_get_file_name_seg(cnum, seg, timeslot, satnum, indir, outfi
 	character(len=*), intent(in) :: indir
 
 	character(len=*), intent(out) :: outfile
+	logical, intent(in) :: single_seg
 	logical, intent(in) :: verbose
 	character(len=3) :: tstr
 	character(len=32) :: tmpstr
@@ -324,7 +325,11 @@ integer function AHI_get_file_name_seg(cnum, seg, timeslot, satnum, indir, outfi
 	endif
 	write(tstr,"(I2.2)")seg
 	outfile = trim(outfile)//trim(tstr)
-	outfile = trim(outfile)//trim("10.DAT")
+	if (single_seg .neqv. .true.) then
+    	outfile = trim(outfile)//trim("10.DAT")
+    else
+    	outfile = trim(outfile)//trim("01.DAT")
+    endif
 	
 	INQUIRE(FILE=trim(outfile), EXIST=file_exists)
 	if (file_exists .neqv. .true.) then
