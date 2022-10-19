@@ -10,6 +10,7 @@ module himawari_navigation
 	use himawari
 	use iso_c_binding
 	use himawari_headerinfo
+	use omp_lib
 
 	implicit none
 
@@ -283,7 +284,10 @@ integer function AHI_Calctime(ahi_main,verbose) result(status)
 	ymax = ahi_main%ahi_extent%y_max - ahi_main%ahi_extent%y_min + 1
     if(ahi_main%do_solar_angles .eqv. .true.) then
 #ifdef _OPENMP
-    if (verbose) print*,"Processing solar geometry using OpenMP"
+	if (verbose) then
+		n_threads = omp_get_max_threads()
+		write(*,*) 'Processing solar geometry using',n_threads,'threads'
+	endif
 !$omp parallel DO PRIVATE(i,x,y,sza,saa,tnr)
 #endif
 	    do y=ymin,ymax
@@ -324,6 +328,7 @@ integer function AHI_calc_satangs(ahi_main,verbose) result(status)
     
     real(kind=ahi_dreal) :: c, sq, achcp
 	integer              :: xmin, ymin, xmax, ymax, xpos, ypos
+	integer              :: n_threads
     
     ! Navigational data from the Himawari dataset
     a = ahi_main%ahi_navdata%eqtrRadius
@@ -344,7 +349,10 @@ integer function AHI_calc_satangs(ahi_main,verbose) result(status)
 	xmax = ahi_main%ahi_extent%x_max - ahi_main%ahi_extent%x_min + 1 
 	ymax = ahi_main%ahi_extent%y_max - ahi_main%ahi_extent%y_min + 1
 #ifdef _OPENMP
-    if (verbose) print*,"Processing viewing geometry using OpenMP"
+	if (verbose) then
+		n_threads = omp_get_max_threads()
+		write(*,*) 'Processing viewing geometry using',n_threads,'threads'
+	endif
 !$omp parallel DO PRIVATE(cos_o_lat, sin_o_lat, cos_o_lon, sin_o_lon, ut1, theta_o, c, sq, achcp, sat_x, sat_y, sat_z, obs_x, obs_y, obs_z, del_x, del_y, del_z, top_s, top_e, top_z, az_, rg_, el_)
 #endif
     do ypos=ymin,ymax

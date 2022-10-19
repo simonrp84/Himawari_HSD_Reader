@@ -90,8 +90,6 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
 	! Check if we're processing older AWS data.
 	! This only has one segment for the full disk.
     dotpos = index(trim(filename),"S0101")
-    print*,dotpos
-    print*,trim(filename)
     if (dotpos > 0) then
         ahi_main%single_seg = .true.
     else
