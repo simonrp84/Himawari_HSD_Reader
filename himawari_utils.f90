@@ -276,7 +276,7 @@ integer function AHI_get_file_name(cnum, timeslot, satnum, indir, outfile,verbos
 end function AHI_get_file_name
 
 
-integer function AHI_get_file_name_seg(cnum, seg, timeslot, satnum, indir, outfile, single_seg, verbose) result(status)
+integer function AHI_get_file_name_seg(cnum, seg, timeslot, satnum, indir, outfile, rego, single_seg, verbose) result(status)
 
 	integer, intent(in) :: cnum
 	integer, intent(in) :: seg
@@ -285,6 +285,7 @@ integer function AHI_get_file_name_seg(cnum, seg, timeslot, satnum, indir, outfi
 	character(len=*), intent(in) :: indir
 
 	character(len=*), intent(out) :: outfile
+	character(len=*) :: rego
 	logical, intent(in) :: single_seg
 	logical, intent(in) :: verbose
 	character(len=3) :: tstr
@@ -315,7 +316,9 @@ integer function AHI_get_file_name_seg(cnum, seg, timeslot, satnum, indir, outfi
 		return
 	endif
 	outfile = trim(outfile)//trim(tmpstr)
-	outfile = trim(outfile)//trim("_FLDK_R")
+
+	! Set up region portion
+	outfile = trim(outfile)//trim(rego)//"R"
 	if (cnum.eq.1.or.cnum.eq.2.or.cnum.eq.4) then
 		outfile = trim(outfile)//trim("10_S")
 	else if (cnum.eq.3) then
@@ -330,7 +333,7 @@ integer function AHI_get_file_name_seg(cnum, seg, timeslot, satnum, indir, outfi
     else
     	outfile = trim(outfile)//trim("01.DAT")
     endif
-	
+
 	INQUIRE(FILE=trim(outfile), EXIST=file_exists)
 	if (file_exists .neqv. .true.) then
 	    if (satnum .ne. 100) then

@@ -50,7 +50,7 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
 	logical,intent(in) :: verbose
 
 	character(len=16) :: dtstr
-	integer :: satnum, dotpos
+	integer :: satnum, dotpos, tmpreg, stat
 	character(len=HIMAWARI_CHARLEN) :: timeslot
 	character(len=HIMAWARI_CHARLEN) :: indir
 	integer,dimension(HIMAWARI_NCHANS) :: inbands
@@ -86,11 +86,30 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
 		    satnum = 100
 		endif
 	endif
-	
+
+	! Get the region being processed
+	dotpos = index(trim(filename), "_FLDK_")
+    if (dotpos > 0) then
+		ahi_main%ahi_info%region = trim(filename(dotpos:dotpos+5))
+	else
+		dotpos = index(trim(filename), "_R30")
+    	if (dotpos > 0) then
+			ahi_main%ahi_info%region = trim(filename(dotpos:dotpos+5))
+		else
+			dotpos = index(trim(filename), "_JP0")
+			if (dotpos > 0) then
+				ahi_main%ahi_info%region = trim(filename(dotpos:dotpos+5))
+			else
+				status = HIMAWARI_FAILURE
+				return
+			end if
+		end if
+	end if
+
 	! Check if we're processing older AWS data.
 	! This only has one segment for the full disk.
     dotpos = index(trim(filename),"S0101")
-    if (dotpos > 0) then
+    if (dotpos > 0 .or. trim(ahi_main%ahi_info%region) /= "_FLDK_") then
         ahi_main%single_seg = .true.
     else
         ahi_main%single_seg = .false.
@@ -510,7 +529,8 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 					if (j==0) then
 						retval = AHI_get_file_name(i,ahi_main%ahi_info%timeslot,ahi_main%ahi_info%satnum,ahi_main%ahi_info%indir,fname,verbose)
 					else
-						retval = AHI_get_file_name_seg(i, j, ahi_main%ahi_info%timeslot, ahi_main%ahi_info%satnum, ahi_main%ahi_info%indir, fname, ahi_main%single_seg, verbose)
+						retval = AHI_get_file_name_seg(i, j, ahi_main%ahi_info%timeslot, ahi_main%ahi_info%satnum, ahi_main%ahi_info%indir, &
+								                       fname, ahi_main%ahi_info%region, ahi_main%single_seg, verbose)
 					endif
 					if (retval/=HIMAWARI_SUCCESS) then
 						write(*,*)"Cannot get filename for band: ",i
@@ -527,7 +547,8 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 					endl = segpos(j)+segdel-1
 					! Note: We get gain for each segment and assume it's the same across all segments to be read.
 					! To my knowledge, this assumption is correct. I've not found any segments with differing gains.
-					retval = AHI_readchan(fname, tseg, i, ahi_main%convert(i), cal_gain_tmp, ahi_main%ahi_navdata, ahi_main%upd_cal, ahi_main%single_seg, verbose)
+					retval = AHI_readchan(fname, tseg, i, ahi_main%convert(i), cal_gain_tmp, ahi_main%ahi_navdata, &
+							ahi_main%upd_cal, ahi_main%single_seg, ahi_main%ahi_info%region, verbose)
 
 					y_start = cur_y
 					y_end = cur_y + ahi_main%ahi_extent%endpos(indvar) - ahi_main%ahi_extent%startpos(indvar)
@@ -565,7 +586,8 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 
 end function AHI_Setup_Read_Chans
 
-integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, upd_cal, single_seg, verbose)result(status)
+integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, &
+		upd_cal, single_seg, region, verbose)result(status)
 
 	character(len=*), intent(in) :: fname
 	real(kind=ahi_sreal), DIMENSION(:,:), intent(inout) :: indata
@@ -576,6 +598,7 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 	
 	logical,intent(in) :: upd_cal
 	logical,intent(in) :: single_seg
+	character(len=*),intent(in) :: region
 	logical,intent(in) :: verbose
 
 	integer(2), DIMENSION(:,:), ALLOCATABLE :: tdata
@@ -588,46 +611,30 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 	integer :: reclen,xsize,ysize,i,x,y,bval,retval
 	real :: temp,temp2
 	integer :: arrxs,arrys,filelun,flen
+	logical :: fldk
 	real(kind=ahi_dreal) :: gain,offset,c0,c1,c2,lspd,plnk,bolz,clamb
+
+	if (trim(region) == "_FLDK_") then
+		fldk = .true.
+	else
+		fldk = .false.
+	end if
 
 	bval = band
 
-	if (band==1.or.band==2.or.band==4) then
-		open(newunit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
-		if (single_seg .neqv. .true.) then 
-		    arrxs = HIMAWARI_VIS_NLINES/10
-		else
-		    arrxs = HIMAWARI_VIS_NLINES
-		endif
-		arrys = HIMAWARI_VIS_NCOLS
-	else if (band==3) then
-		open(newunit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
-		if (single_seg .neqv. .true.) then 
-		    arrxs = HIMAWARI_HVI_NLINES/10
-		else
-		    arrxs = HIMAWARI_HVI_NLINES
-		endif
-		arrys = HIMAWARI_HVI_NCOLS
-	else
-		open(newunit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
-		if (single_seg .neqv. .true.) then 
-		    arrxs = HIMAWARI_IR_NLINES/10
-		else
-		    arrxs = HIMAWARI_IR_NLINES
-		endif
-		arrys = HIMAWARI_IR_NCOLS
-	endif
-
-	allocate(tdata(arrys,arrxs))
-	allocate(tdata2(arrys,arrxs))
-	allocate(temp3(arrys,arrxs))
+	open(newunit=filelun, file=fname,form='unformatted',action='read',status='old',access='stream',convert='little_endian')
 
 	if (band<7) then
 		retval = AHI_readhdr_VIS(filelun,ahi_hdrvis,verbose)
+
+		! Set number of pixels
+		arrxs = ahi_hdrvis%him_data%nPix
+		arrys = ahi_hdrvis%him_data%nLin
+
 		if (upd_cal .eqv. .true.) then
     		gain = ahi_hdrvis%him_chan_calib%Upd_gain_cnt2rad
     		offset = ahi_hdrvis%him_chan_calib%Upd_cnst_cnt2rad
-    		 if (ahi_hdrvis%him_chan_calib%Upd_gain_cnt2rad .lt. 0.0001) then
+    		 if (ahi_hdrvis%him_chan_calib%Upd_gain_cnt2rad < 0.0001) then
     		    if (verbose) print*, "WARNING: Updated calibration not available, using default."
         		gain = ahi_hdrvis%him_calib%gain_cnt2rad
         		offset = ahi_hdrvis%him_calib%cnst_cnt2rad
@@ -670,6 +677,11 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 
 	else
 		retval = AHI_readhdr_IR(filelun,ahi_hdrir,verbose)
+
+		! Set number of pixels
+		arrxs = ahi_hdrir%him_data%nPix
+		arrys = ahi_hdrir%him_data%nLin
+
 		gain = ahi_hdrir%him_calib%gain_cnt2rad
 		offset = ahi_hdrir%him_calib%cnst_cnt2rad
 		clamb = ahi_hdrir%him_calib%CenWaveLen
@@ -698,6 +710,10 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 
 	ahi_nav%cfac = ahi_nav%cfac/HIMAWARI_DEGTORAD
 	ahi_nav%lfac = ahi_nav%lfac/HIMAWARI_DEGTORAD
+
+	allocate(tdata(arrxs,arrys))
+	allocate(tdata2(arrxs,arrys))
+	allocate(temp3(arrxs,arrys))
 
 	INQUIRE(FILE=fname, SIZE=flen)
 	flen = flen-(arrxs*arrys*2)
