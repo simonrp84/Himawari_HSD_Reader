@@ -81,10 +81,10 @@ program AHI_example_f90
 	endif
 
 !	! Test vals
-	ahi_extent%x_min = 1
-	ahi_extent%x_max = 5500
 	ahi_extent%y_min = 1
 	ahi_extent%y_max = 5500
+	ahi_extent%x_min = 1
+	ahi_extent%x_max = 5500
 
 	ahi_extent%x_size = ahi_extent%x_max - ahi_extent%x_min + 1
 	ahi_extent%y_size = ahi_extent%y_max - ahi_extent%y_min + 1

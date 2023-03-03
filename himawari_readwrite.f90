@@ -111,9 +111,13 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
     dotpos = index(trim(filename),"S0101")
     if (dotpos > 0 .or. trim(ahi_main%ahi_info%region) /= "_FLDK_") then
         ahi_main%single_seg = .true.
+		ahi_extent%segdel_ir = HIMAWARI_IR_NLINES
+		ahi_extent%segdel_vi = HIMAWARI_VIS_NLINES
+		ahi_extent%segdel_hv = HIMAWARI_HVI_NLINES
     else
         ahi_main%single_seg = .false.
     endif
+
 
 	ahi_main%ahi_data%memory_alloc_d = do_not_alloc
 	ahi_main%ahi_data%n_bands = n_bands
@@ -176,7 +180,7 @@ integer function AHI_Main_Read(filename, geofile, ahi_data2, &
 	else
 		ahi_main%ahi_data = ahi_data2
 	endif
-
+	
 	retval = AHI_Setup_Read_Chans(ahi_main,verbose)
 	if (retval/=HIMAWARI_SUCCESS) then
 		status = HIMAWARI_FAILURE
@@ -426,18 +430,14 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 		! Index of y position between segments
 		cur_y = 1
 		! Index of how much data we're reading from a given segment
-		cur_y_s = ahi_main%ahi_extent%segdel_ir
+		cur_y_s = ahi_main%ahi_extent%segdel_ir	
 
 		if (ahi_main%inchans(i)==1) then
 			if (verbose) then
 				write(*,*)"Reading data for channel",i
 			endif
 			if (i==1.or.i==2.or.i==4) then
-	            if (ahi_main%single_seg .neqv. .true.) then 
-				    allocate(tseg(HIMAWARI_VIS_NCOLS,ahi_main%ahi_extent%segdel_vi))
-				else
-					allocate(tseg(ahi_main%ahi_extent%x_size*2,ahi_main%ahi_extent%y_size*2))
-			    endif
+				allocate(tseg(HIMAWARI_VIS_NCOLS,ahi_main%ahi_extent%segdel_vi))
 				
 				tseg(:,:) = him_sreal_fill_value
 				if (ahi_main%vis_res .neqv. .true.) then
@@ -460,11 +460,8 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 
 				indvar = 2
 			else if (i==3)  then
-	            if (ahi_main%single_seg .neqv. .true.) then 
 				allocate(tseg(HIMAWARI_HVI_NCOLS,ahi_main%ahi_extent%segdel_hv))
-				else
-					allocate(tseg(ahi_main%ahi_extent%x_size*4,ahi_main%ahi_extent%y_size*4))
-			    endif
+				
 				if (ahi_main%vis_res .neqv. .true.) then
 					allocate(tdata2(ahi_main%ahi_extent%x_size*4,ahi_main%ahi_extent%y_size*4))
 					xsize = ahi_main%ahi_extent%x_size*4
@@ -484,11 +481,7 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 				segpos = ahi_main%ahi_extent%segpos_hv
 				indvar = 3
 			else
-	            if (ahi_main%single_seg .neqv. .true.) then
-				    allocate(tseg(HIMAWARI_IR_NCOLS,ahi_main%ahi_extent%segdel_ir))
-				else
-					allocate(tseg(ahi_main%ahi_extent%x_size, ahi_main%ahi_extent%y_size))
-			    endif
+	            allocate(tseg(HIMAWARI_IR_NCOLS, ahi_main%ahi_extent%segdel_ir))
 				tseg(:,:) = him_sreal_fill_value
 				if (ahi_main%vis_res .neqv. .true.) then
 					allocate(tdata2(ahi_main%ahi_extent%x_size,ahi_main%ahi_extent%y_size))
@@ -498,6 +491,7 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 					write(*,*)"Cannot process at visible resolution as you have selected a thermal channel."
 					stop
 				endif
+
 				xmin = ahi_main%ahi_extent%x_min
 				xmax = ahi_main%ahi_extent%x_max
 				tdata2(:,:) = him_sreal_fill_value
@@ -547,6 +541,7 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 					endl = segpos(j)+segdel-1
 					! Note: We get gain for each segment and assume it's the same across all segments to be read.
 					! To my knowledge, this assumption is correct. I've not found any segments with differing gains.
+
 					retval = AHI_readchan(fname, tseg, i, ahi_main%convert(i), cal_gain_tmp, ahi_main%ahi_navdata, &
 							ahi_main%upd_cal, ahi_main%single_seg, ahi_main%ahi_info%region, verbose)
 
@@ -613,7 +608,7 @@ integer function AHI_readchan(fname, indata, band, convert, cal_slope, ahi_nav, 
 	integer :: arrxs,arrys,filelun,flen
 	logical :: fldk
 	real(kind=ahi_dreal) :: gain,offset,c0,c1,c2,lspd,plnk,bolz,clamb
-
+	
 	if (trim(region) == "_FLDK_") then
 		fldk = .true.
 	else
