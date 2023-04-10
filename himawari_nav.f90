@@ -366,7 +366,7 @@ integer function AHI_calc_satangs(ahi_main,verbose) result(status)
             ut1 = ahi_main%ahi_data%time(xpos, ypos) / 36525.0
             
             ! This calculates observer position
-            theta_o = 67310.54841 + ut1 * (876600 * 3600 + 8640184.812866 + ut1 * (0.093104 - ut1 * 6.2 * 10e-6))
+            theta_o = 67310.54841 + ut1 * (876600.0 * 3600.0 + 8640184.812866 + ut1 * (0.093104 - ut1 * 6.2 * 10e-6))
             theta_o = mod(theta_o / 240.0, 2 * HIMAWARI_PI)
             theta_o = mod(theta_o + ahi_main%ahi_data%lon(xpos, ypos) * HIMAWARI_DEGTORAD, 2 * HIMAWARI_PI)
             c = 1 / sqrt(1 + flatten * (flatten - 2) * sin_o_lat**2)
@@ -377,7 +377,7 @@ integer function AHI_calc_satangs(ahi_main,verbose) result(status)
             obs_z = (a * sq + obs_alt) * sin_o_lat
             
             ! This calculates satellite position
-            theta_s = 67310.54841 + ut1 * (876600 * 3600 + 8640184.812866 + ut1 * (0.093104 - ut1 * 6.2 * 10e-6))
+            theta_s = 67310.54841 + ut1 * (876600.0 * 3600.0 + 8640184.812866 + ut1 * (0.093104 - ut1 * 6.2 * 10e-6))
             theta_s = mod(theta_s / 240.0, 2 * HIMAWARI_PI)
             theta_s = mod(theta_s + satlon * HIMAWARI_DEGTORAD, 2 * HIMAWARI_PI)
             achcp = ahi_main%ahi_navdata%satdis * cos(satlat)
