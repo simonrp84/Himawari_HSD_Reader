@@ -324,9 +324,9 @@ integer function AHI_Get_SegEnd_Point(ahi_main,curseg,verbose) result(status)
 	    if (ahi_main%ahi_extent%endpos(2) > ahi_main%ahi_extent%segdel_vi) ahi_main%ahi_extent%endpos(2) = ahi_main%ahi_extent%segdel_vi
 	    if (ahi_main%ahi_extent%endpos(3) > ahi_main%ahi_extent%segdel_hv) ahi_main%ahi_extent%endpos(3) = ahi_main%ahi_extent%segdel_hv
 	else
-	    ahi_main%ahi_extent%endpos(1) = ahi_main%ahi_extent%y_max
-	    ahi_main%ahi_extent%endpos(2) = ahi_main%ahi_extent%y_max*2
-	    ahi_main%ahi_extent%endpos(3) = ahi_main%ahi_extent%y_max*4
+	    ahi_main%ahi_extent%endpos(1) = ahi_main%ahi_extent%y_max - 1
+	    ahi_main%ahi_extent%endpos(2) = ahi_main%ahi_extent%y_max*2 - 1
+	    ahi_main%ahi_extent%endpos(3) = ahi_main%ahi_extent%y_max*4 - 1
     endif
 
 	if (ahi_main%ahi_extent%endpos(1) <= 0.) then
@@ -436,68 +436,88 @@ integer function AHI_Setup_Read_Chans(ahi_main, verbose) result(status)
 			if (verbose) then
 				write(*,*)"Reading data for channel",i
 			endif
-			if (i==1.or.i==2.or.i==4) then
-				allocate(tseg(HIMAWARI_VIS_NCOLS,ahi_main%ahi_extent%segdel_vi))
-				
-				tseg(:,:) = him_sreal_fill_value
-				if (ahi_main%vis_res .neqv. .true.) then
-					allocate(tdata2(ahi_main%ahi_extent%x_size*2,ahi_main%ahi_extent%y_size*2))
-					xsize = ahi_main%ahi_extent%x_size*2
-					ysize = ahi_main%ahi_extent%y_size*2
-					xmin = ahi_main%ahi_extent%x_min*2 - 1
-					xmax = ahi_main%ahi_extent%x_max*2
+			if (ahi_main%single_seg .neqv. .true.) then 
+				if (i==1.or.i==2.or.i==4) then
+					allocate(tseg(HIMAWARI_VIS_NCOLS,ahi_main%ahi_extent%segdel_vi))
+					
+					tseg(:,:) = him_sreal_fill_value
+					if (ahi_main%vis_res .neqv. .true.) then
+						allocate(tdata2(ahi_main%ahi_extent%x_size*2,ahi_main%ahi_extent%y_size*2))
+						xsize = ahi_main%ahi_extent%x_size*2
+						ysize = ahi_main%ahi_extent%y_size*2
+						xmin = ahi_main%ahi_extent%x_min*2 - 1
+						xmax = ahi_main%ahi_extent%x_max*2
+					else
+						allocate(tdata2(ahi_main%ahi_extent%x_size,ahi_main%ahi_extent%y_size))
+						xsize = ahi_main%ahi_extent%x_size
+						ysize = ahi_main%ahi_extent%y_size
+						xmin = ahi_main%ahi_extent%x_min
+						xmax = ahi_main%ahi_extent%x_max
+					endif
+
+					tdata2(:,:) = him_sreal_fill_value
+					segdel = ahi_main%ahi_extent%segdel_vi
+					segpos = ahi_main%ahi_extent%segpos_vi
+
+					indvar = 2
+				else if (i==3)  then
+					allocate(tseg(HIMAWARI_HVI_NCOLS,ahi_main%ahi_extent%segdel_hv))
+					
+					if (ahi_main%vis_res .neqv. .true.) then
+						allocate(tdata2(ahi_main%ahi_extent%x_size*4,ahi_main%ahi_extent%y_size*4))
+						xsize = ahi_main%ahi_extent%x_size*4
+						ysize = ahi_main%ahi_extent%y_size*4
+						xmin = ahi_main%ahi_extent%x_min*4 - 3
+						xmax = ahi_main%ahi_extent%x_max*4
+					else
+						allocate(tdata2(ahi_main%ahi_extent%x_size*2,ahi_main%ahi_extent%y_size*2))
+						xsize = ahi_main%ahi_extent%x_size*2
+						ysize = ahi_main%ahi_extent%y_size*2
+						xmin = ahi_main%ahi_extent%x_min*2 - 1
+						xmax = ahi_main%ahi_extent%x_max*2
+					endif
+					tdata2(:,:) = him_sreal_fill_value
+					tseg(:,:) = him_sreal_fill_value
+					segdel = ahi_main%ahi_extent%segdel_hv
+					segpos = ahi_main%ahi_extent%segpos_hv
+					indvar = 3
 				else
-					allocate(tdata2(ahi_main%ahi_extent%x_size,ahi_main%ahi_extent%y_size))
-					xsize = ahi_main%ahi_extent%x_size
-					ysize = ahi_main%ahi_extent%y_size
+					allocate(tseg(HIMAWARI_IR_NCOLS, ahi_main%ahi_extent%segdel_ir))
+					tseg(:,:) = him_sreal_fill_value
+					if (ahi_main%vis_res .neqv. .true.) then
+						allocate(tdata2(ahi_main%ahi_extent%x_size,ahi_main%ahi_extent%y_size))
+						xsize = ahi_main%ahi_extent%x_size
+						ysize = ahi_main%ahi_extent%y_size
+					else
+						write(*,*)"Cannot process at visible resolution as you have selected a thermal channel."
+						stop
+					endif
+
 					xmin = ahi_main%ahi_extent%x_min
 					xmax = ahi_main%ahi_extent%x_max
+					tdata2(:,:) = him_sreal_fill_value
+					segdel = ahi_main%ahi_extent%segdel_ir
+					segpos = ahi_main%ahi_extent%segpos_ir
+					indvar = 1
 				endif
-
-				tdata2(:,:) = him_sreal_fill_value
-				segdel = ahi_main%ahi_extent%segdel_vi
-				segpos = ahi_main%ahi_extent%segpos_vi
-
-				indvar = 2
-			else if (i==3)  then
-				allocate(tseg(HIMAWARI_HVI_NCOLS,ahi_main%ahi_extent%segdel_hv))
-				
-				if (ahi_main%vis_res .neqv. .true.) then
-					allocate(tdata2(ahi_main%ahi_extent%x_size*4,ahi_main%ahi_extent%y_size*4))
-					xsize = ahi_main%ahi_extent%x_size*4
-					ysize = ahi_main%ahi_extent%y_size*4
-					xmin = ahi_main%ahi_extent%x_min*4 - 3
-					xmax = ahi_main%ahi_extent%x_max*4
-				else
-					allocate(tdata2(ahi_main%ahi_extent%x_size*2,ahi_main%ahi_extent%y_size*2))
-					xsize = ahi_main%ahi_extent%x_size*2
-					ysize = ahi_main%ahi_extent%y_size*2
-					xmin = ahi_main%ahi_extent%x_min*2 - 1
-					xmax = ahi_main%ahi_extent%x_max*2
-				endif
-				tdata2(:,:) = him_sreal_fill_value
-				tseg(:,:) = him_sreal_fill_value
-				segdel = ahi_main%ahi_extent%segdel_hv
-				segpos = ahi_main%ahi_extent%segpos_hv
-				indvar = 3
 			else
-	            allocate(tseg(HIMAWARI_IR_NCOLS, ahi_main%ahi_extent%segdel_ir))
-				tseg(:,:) = him_sreal_fill_value
-				if (ahi_main%vis_res .neqv. .true.) then
-					allocate(tdata2(ahi_main%ahi_extent%x_size,ahi_main%ahi_extent%y_size))
-					xsize = ahi_main%ahi_extent%x_size
-					ysize = ahi_main%ahi_extent%y_size
-				else
-					write(*,*)"Cannot process at visible resolution as you have selected a thermal channel."
-					stop
-				endif
+					allocate(tseg(HIMAWARI_IR_NCOLS, ahi_main%ahi_extent%segdel_ir))
+					tseg(:,:) = him_sreal_fill_value
+					if (ahi_main%vis_res .neqv. .true.) then
+						allocate(tdata2(ahi_main%ahi_extent%x_size,ahi_main%ahi_extent%y_size))
+						xsize = ahi_main%ahi_extent%x_size
+						ysize = ahi_main%ahi_extent%y_size
+					else
+						write(*,*)"Cannot process at visible resolution as you have selected a thermal channel."
+						stop
+					endif
 
-				xmin = ahi_main%ahi_extent%x_min
-				xmax = ahi_main%ahi_extent%x_max
-				tdata2(:,:) = him_sreal_fill_value
-				segdel = ahi_main%ahi_extent%segdel_ir
-				segpos = ahi_main%ahi_extent%segpos_ir
-				indvar = 1
+					xmin = ahi_main%ahi_extent%x_min
+					xmax = ahi_main%ahi_extent%x_max
+					tdata2(:,:) = him_sreal_fill_value
+					segdel = ahi_main%ahi_extent%segdel_ir
+					segpos = ahi_main%ahi_extent%segpos_ir
+					indvar = 1
 			endif
 
 			do j=minseg,maxseg

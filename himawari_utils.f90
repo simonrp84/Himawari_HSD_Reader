@@ -319,12 +319,17 @@ integer function AHI_get_file_name_seg(cnum, seg, timeslot, satnum, indir, outfi
 
 	! Set up region portion
 	outfile = trim(outfile)//trim(rego)//"R"
-	if (cnum.eq.1.or.cnum.eq.2.or.cnum.eq.4) then
-		outfile = trim(outfile)//trim("10_S")
-	else if (cnum.eq.3) then
-		outfile = trim(outfile)//trim("05_S")
+	
+	if (single_seg .neqv. .true.) then
+		if (cnum.eq.1.or.cnum.eq.2.or.cnum.eq.4) then
+			outfile = trim(outfile)//trim("10_S")
+		else if (cnum.eq.3) then
+			outfile = trim(outfile)//trim("05_S")
+		else
+			outfile = trim(outfile)//trim("20_S")
+		endif
 	else
-		outfile = trim(outfile)//trim("20_S")
+			outfile = trim(outfile)//trim("20_S")
 	endif
 	write(tstr,"(I2.2)")seg
 	outfile = trim(outfile)//trim(tstr)
